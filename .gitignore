@@ -1,0 +1,12 @@
+*~
+*.swp
+.*.swp
+*.swo
+.*.swo
+*.slo
+*.lo
+*.o
+*.so
+*.lai
+*.la
+*.a
