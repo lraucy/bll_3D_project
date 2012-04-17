@@ -44,12 +44,18 @@ void Scene::updateBoundingBox () {
 
 // Changer ce code pour creer des scenes originales
 void Scene::buildDefaultScene () {
-    Mesh groundMesh;
+    /*    Mesh groundMesh;
     groundMesh.loadOFF ("models/ground.off");
     Material groundMat;
     Object ground (groundMesh, groundMat);    
     objects.push_back (ground);
-    Mesh ramMesh;
+    */Mesh sphereMesh;
+    sphereMesh.loadOFF ("models/sphere.off");
+    Material sphereMat (1.f, 1.f, Vec3Df (1.f, .6f, .2f));
+    Object sphere (sphereMesh, sphereMat);
+    sphere.setTrans (Vec3Df (1.f, 0.5f, 0.f));
+    objects.push_back (sphere);
+    /*    Mesh ramMesh;
     ramMesh.loadOFF ("models/ram.off");
     Material ramMat (1.f, 1.f, Vec3Df (1.f, .6f, .2f));
     Object ram (ramMesh, ramMat);
@@ -67,6 +73,6 @@ void Scene::buildDefaultScene () {
     Object garg (gargMesh, gargMat);
     garg.setTrans (Vec3Df (-1.f, 1.0f, 0.1f));
     objects.push_back (garg);
-    Light l (Vec3Df (3.0f, 3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
+    */Light l (Vec3Df (3.0f, 3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
     lights.push_back (l);
 }
