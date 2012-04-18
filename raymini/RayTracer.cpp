@@ -49,36 +49,46 @@ QImage RayTracer::render (const Vec3Df & camPos,
     const Vec3Df rangeBb = maxBb - minBb;
     QProgressDialog progressDialog ("Raytracing...", "Cancel", 0, 100);
     progressDialog.show ();
-    for (unsigned int i = 0; i < screenWidth; i++) {
+  
+    
+      for (unsigned int i = 0; i < screenWidth; i++) {
         progressDialog.setValue ((100*i)/screenWidth);
         for (unsigned int j = 0; j < screenHeight; j++) {
-            float tanX = tan (fieldOfView)*aspectRatio;
+            
+	    float tanX = tan (fieldOfView)*aspectRatio;
             float tanY = tan (fieldOfView);
             Vec3Df stepX = (float (i) - screenWidth/2.f)/screenWidth * tanX * rightVector;
             Vec3Df stepY = (float (j) - screenHeight/2.f)/screenHeight * tanY * upVector;
             Vec3Df step = stepX + stepY;
             Vec3Df dir = direction + step;
+	    // std::cout<<"direction x"<<dir[0]<<"\n";
+	    //std::cout<<"direction y"<<dir[1]<<"\n";
+	    //std::cout<<"direction z"<<dir[2]<<"\n";
             dir.normalize ();
             Vec3Df intersectionPoint;
             float smallestIntersectionDistance = 1000000.f;
             Vec3Df c (backgroundColor);
             for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
-                const Object & o = scene->getObjects()[k];
-                Ray ray (camPos-o.getTrans (), dir);
-                bool hasIntersection = ray.intersect (o.getBoundingBox (),
-                                                      intersectionPoint);
-                if (hasIntersection) {
-                    float intersectionDistance = Vec3Df::squaredDistance (intersectionPoint + o.getTrans (),
-                                                                          camPos);
+             const Object & o = scene->getObjects()[k];
+             Ray ray (camPos-o.getTrans (), dir);
+                for(unsigned int m = 0; m < o.getMesh().getTriangles().size(); m++){
+		  bool hasIntersection = ray.intersectWithTriangle(o.getMesh(),o.getMesh().getTriangles()[m],intersectionPoint);
+                
+		  if (hasIntersection) {
+                    float intersectionDistance = Vec3Df::squaredDistance (intersectionPoint + o.getTrans (),camPos);
                     if (intersectionDistance < smallestIntersectionDistance) {
                         c = 255.f * ((intersectionPoint - minBb) / rangeBb);
                         smallestIntersectionDistance = intersectionDistance;
                     }
                 }
             }
-            image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
+	    }
+	    //std::cout<<"pixel i"<< i <<"\n";
+            //std::cout<<"pixel j"<< j <<"\n";	    	      
+  image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
         }
     }
+	
     progressDialog.setValue (100);
     return image;
 }
