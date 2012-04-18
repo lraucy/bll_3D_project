@@ -62,6 +62,7 @@ bool Ray::intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const
     return (true);			
 }
 
+#define SMALL_NUMBER 0.0000001
 bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & intersectionPoint) const {
 	// method found on http://softsurfer.com/Archive/algorithm_0105/algorithm_0105.htm
 	const std::vector<Vertex> & vertices = mesh.getVertices();
@@ -76,10 +77,10 @@ bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & inte
 		return false;
 
 	float denominator = (Vec3Df::dotProduct(n, this->direction));
-	if (denominator == 0)
+	if (fabs(denominator) < SMALL_NUMBER)
 		return false;
 	float r = Vec3Df::dotProduct(n,v0 - this->origin) / denominator;
-	if (r < 0)
+	if (r < 0.0)
 		return false;
 	intersectionPoint = this->origin + r * this->direction;
 
@@ -90,14 +91,15 @@ bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & inte
 	float dotuv = Vec3Df::dotProduct(u,v);
 	float dotuw = Vec3Df::dotProduct(u,w);
 	float dotvw = Vec3Df::dotProduct(v,w);
-	denominator = powf(dotuv,2) - dotuu * dotvv;
-	if (denominator == 0)
-		return false;
-	float s = (dotuv*dotvw - dotvv*dotuw)/ denominator;
-	float t = (dotuv*dotuw - dotuu*dotvw) / denominator;
+	denominator = dotuv*dotuv - dotuu * dotvv;
 
-	if (s >= 0 && t >= 0 && s+t <= 1)
-		return true;
-	else
+	float s = (dotuv*dotvw - dotvv*dotuw)/ denominator;
+	if(s < 0.0 || s > 1.0)
 		return false;
+
+	float t = (dotuv*dotuw - dotuu*dotvw) / denominator;
+	if (t < 0.0 || s+t > 1.0)
+		return false;
+	else
+		return true;
 }
