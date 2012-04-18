@@ -83,15 +83,16 @@ bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & inte
 	Vec3Df v = v2 - v0;
 	Vec3Df w = intersectionPoint - v0;
 
-	denominator = Vec3Df::dotProduct(u, Vec3Df::crossProduct(n, v));
+	float dotuu = Vec3Df::dotProduct(u,u);
+	float dotvv = Vec3Df::dotProduct(v,v);
+	float dotuv = Vec3Df::dotProduct(u,v);
+	float dotuw = Vec3Df::dotProduct(u,w);
+	float dotvw = Vec3Df::dotProduct(v,w);
+	denominator = powf(dotuv,2) - dotuu * dotvv;
 	if (denominator == 0)
 		return false;
-	float s = Vec3Df::dotProduct(w, Vec3Df::crossProduct(n, v)) / denominator;
-
-	denominator = Vec3Df::dotProduct(v, Vec3Df::crossProduct(n, u));
-	if (denominator == 0)
-		return false;
-	float t = Vec3Df::dotProduct(w, Vec3Df::crossProduct(n, u)) / denominator;
+	float s = (dotuv*dotvw - dotvv*dotuw)/ denominator;
+	float t = (dotuv*dotuw - dotuu*dotvw) / denominator;
 
 	if (s >= 0 && t >= 0 && s+t <= 1)
 		return true;
