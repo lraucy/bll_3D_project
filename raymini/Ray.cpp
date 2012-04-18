@@ -64,12 +64,16 @@ bool Ray::intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const
 
 bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & intersectionPoint) const {
 	// method found on http://softsurfer.com/Archive/algorithm_0105/algorithm_0105.htm
-	Vec3Df n = mesh.computeTriangleNormal(triangle);
-
 	const std::vector<Vertex> & vertices = mesh.getVertices();
 	const Vec3Df & v0 = vertices[triangle.getVertex(0)].getPos();
 	const Vec3Df & v1 = vertices[triangle.getVertex(1)].getPos();
 	const Vec3Df & v2 = vertices[triangle.getVertex(2)].getPos();
+
+	Vec3Df u = v1 - v0;
+	Vec3Df v = v2 - v0;
+	Vec3Df n = Vec3Df::crossProduct(u,v);
+	if(n == Vec3Df(0.0,0.0,0.0))
+		return false;
 
 	float denominator = (Vec3Df::dotProduct(n, this->direction));
 	if (denominator == 0)
@@ -79,8 +83,6 @@ bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & inte
 		return false;
 	intersectionPoint = this->origin + r * this->direction;
 
-	Vec3Df u = v1 - v0;
-	Vec3Df v = v2 - v0;
 	Vec3Df w = intersectionPoint - v0;
 
 	float dotuu = Vec3Df::dotProduct(u,u);
