@@ -67,45 +67,46 @@ QImage RayTracer::render (const Vec3Df & camPos,
 	
 	    for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
 		const Object & o = scene->getObjects()[k];
-		
-		//if(ray.intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
-
-		for(unsigned int l = 0; l < o.getMesh().getTriangles().size (); l++) {
-		    const Triangle & t = o.getMesh().getTriangles()[l];
-		    Ray ray (camPos-o.getTrans (), dir);	    
-		    Vec3Df triangle[3] = { o.getMesh().getVertices()[t.getVertex(0)].getPos(), 
-					   o.getMesh().getVertices()[t.getVertex(1)].getPos(),
-					   o.getMesh().getVertices()[t.getVertex(2)].getPos() };
+		Ray ray (camPos-o.getTrans (), dir);
+                bool hasBoxIntersection = ray.intersect (o.getBoundingBox (),
+							 intersectionPoint);
+		if(hasBoxIntersection) {
+		    for(unsigned int l = 0; l < o.getMesh().getTriangles().size (); l++) {
+			const Triangle & t = o.getMesh().getTriangles()[l];
+			Vec3Df triangle[3] = { o.getMesh().getVertices()[t.getVertex(0)].getPos(), 
+					       o.getMesh().getVertices()[t.getVertex(1)].getPos(),
+					       o.getMesh().getVertices()[t.getVertex(2)].getPos() };
 		    
-		    bool hasIntersection =  ray.intersectTriangle (triangle, intersectionPoint, baricentricCoo);
+			bool hasIntersection =  ray.intersectTriangle (triangle, intersectionPoint, baricentricCoo);
 	   
-		    if (hasIntersection) {
-			Vec3Df normal = baricentricCoo[0]*o.getMesh().getVertices()[t.getVertex(0)].getNormal() + 
-			    baricentricCoo[1]*o.getMesh().getVertices()[t.getVertex(1)].getNormal() +   
-			    baricentricCoo[2]*o.getMesh().getVertices()[t.getVertex(2)].getNormal();
+			if (hasIntersection) {
+			    Vec3Df normal = baricentricCoo[0]*o.getMesh().getVertices()[t.getVertex(0)].getNormal() + 
+				baricentricCoo[1]*o.getMesh().getVertices()[t.getVertex(1)].getNormal() +   
+				baricentricCoo[2]*o.getMesh().getVertices()[t.getVertex(2)].getNormal();
 			
-			normal.normalize();
-			Vec3Df lightVector = intersectionPoint - scene->getLights()[0].getPos();
-			lightVector.normalize();
+			    normal.normalize();
+			    Vec3Df lightVector = intersectionPoint - scene->getLights()[0].getPos();
+			    lightVector.normalize();
 
-			float w_i = std::max(Vec3Df::dotProduct(normal, lightVector), (float) 0);
-			Vec3Df cameraVect;
+			    float w_i = std::max(Vec3Df::dotProduct(normal, lightVector), (float) 0);
+			    Vec3Df cameraVect;
 		
-			//finalColor = diffuseRef*w_i + specRef*pow(max(Vec3Df::dotProduct(dotProduct, cameraVect), (float)0.0), shininess);
+			    //finalColor = diffuseRef*w_i + specRef*pow(max(Vec3Df::dotProduct(dotProduct, cameraVect), (float)0.0), shininess);
 			
-			Vec3Df colorVect;
-			float diffuseRef = o.getMaterial().getDiffuse();
-			float specRef = o.getMaterial().getSpecular();
-			float shininess = 16.0f;
+			    Vec3Df colorVect;
+			    float diffuseRef = o.getMaterial().getDiffuse();
+			    float specRef = o.getMaterial().getSpecular();
+			    float shininess = 16.0f;
 
-			colorVect = o.getMaterial().getColor();
+			    colorVect = o.getMaterial().getColor();
 	
-			float color = diffuseRef*w_i + specRef*pow(std::max(Vec3Df::dotProduct(Vec3Df::crossProduct(normal, lightVector), ray.getDirection()), (float)0.0), shininess);
+			    float color = diffuseRef*w_i + specRef*pow(std::max(Vec3Df::dotProduct(Vec3Df::crossProduct(normal, lightVector), ray.getDirection()), (float)0.0), shininess);
 			
-			color = 255 - color*255;
-			c = Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
-		    }
+			    color = 255 - color*255;
+			    c = Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
+			}
 	    
+		    }
 		}
 	    }
 	    image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
