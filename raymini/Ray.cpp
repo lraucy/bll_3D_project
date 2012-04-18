@@ -77,7 +77,8 @@ bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & inte
 		return false;
 
 	float denominator = (Vec3Df::dotProduct(n, this->direction));
-	if (fabs(denominator) < SMALL_NUMBER)
+	if (denominator > 0 // check face orientation
+			|| - denominator < SMALL_NUMBER) // check parallelism between ray and triangle
 		return false;
 	float r = Vec3Df::dotProduct(n,v0 - this->origin) / denominator;
 	if (r < 0.0)
