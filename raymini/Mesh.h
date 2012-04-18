@@ -37,6 +37,7 @@ public:
     void clearTopology ();
     void unmarkAllVertices ();
     void recomputeSmoothVertexNormals (unsigned int weight);
+    Vec3Df computeTriangleNormal (const Triangle & triangle) const;
     void computeTriangleNormals (std::vector<Vec3Df> & triangleNormals);  
     void collectOneRing (std::vector<std::vector<unsigned int> > & oneRing) const;
     void collectOrderedOneRing (std::vector<std::vector<unsigned int> > & oneRing) const;

@@ -61,3 +61,40 @@ bool Ray::intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const
         }
     return (true);			
 }
+
+bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & intersectionPoint) const {
+	// method found on http://softsurfer.com/Archive/algorithm_0105/algorithm_0105.htm
+	Vec3Df n = mesh.computeTriangleNormal(triangle);
+
+	const std::vector<Vertex> & vertices = mesh.getVertices();
+	const Vec3Df & v0 = vertices[triangle.getVertex(0)].getPos();
+	const Vec3Df & v1 = vertices[triangle.getVertex(1)].getPos();
+	const Vec3Df & v2 = vertices[triangle.getVertex(2)].getPos();
+
+	float denominator = (Vec3Df::dotProduct(n, this->direction));
+	if (denominator == 0)
+		return false;
+	float r = Vec3Df::dotProduct(n,v0 - this->origin) / denominator;
+	if (r < 0)
+		return false;
+	intersectionPoint = this->origin + r * this->direction;
+
+	Vec3Df u = v1 - v0;
+	Vec3Df v = v2 - v0;
+	Vec3Df w = intersectionPoint - v0;
+
+	denominator = Vec3Df::dotProduct(u, Vec3Df::crossProduct(n, v));
+	if (denominator == 0)
+		return false;
+	float s = Vec3Df::dotProduct(w, Vec3Df::crossProduct(n, v)) / denominator;
+
+	denominator = Vec3Df::dotProduct(v, Vec3Df::crossProduct(n, u));
+	if (denominator == 0)
+		return false;
+	float t = Vec3Df::dotProduct(w, Vec3Df::crossProduct(n, u)) / denominator;
+
+	if (s >= 0 && t >= 0 && s+t <= 1)
+		return true;
+	else
+		return false;
+}

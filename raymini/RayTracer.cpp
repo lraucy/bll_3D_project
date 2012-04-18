@@ -65,16 +65,17 @@ QImage RayTracer::render (const Vec3Df & camPos,
             for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
                 const Object & o = scene->getObjects()[k];
                 Ray ray (camPos-o.getTrans (), dir);
-                bool hasIntersection = ray.intersect (o.getBoundingBox (),
-                                                      intersectionPoint);
-                if (hasIntersection) {
-                    float intersectionDistance = Vec3Df::squaredDistance (intersectionPoint + o.getTrans (),
-                                                                          camPos);
-                    if (intersectionDistance < smallestIntersectionDistance) {
-                        c = 255.f * ((intersectionPoint - minBb) / rangeBb);
-                        smallestIntersectionDistance = intersectionDistance;
-                    }
-                }
+				for (unsigned int m = 0; m < o.getMesh().getTriangles().size(); m++) {
+					bool hasIntersection = ray.intersect(o.getMesh(), o.getMesh().getTriangles()[m], intersectionPoint);
+					if (hasIntersection) {
+						float intersectionDistance = Vec3Df::squaredDistance (intersectionPoint
+								+ o.getTrans (), camPos);
+						if (intersectionDistance < smallestIntersectionDistance) {
+							c = 255.f * ((intersectionPoint - minBb) / rangeBb);
+							smallestIntersectionDistance = intersectionDistance;
+						}
+					}
+				}
             }
             image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
         }

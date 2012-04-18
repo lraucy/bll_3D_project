@@ -32,15 +32,19 @@ void Mesh::unmarkAllVertices () {
         vertices[i].unmark ();
 }
 
+Vec3Df Mesh::computeTriangleNormal(const Triangle & triangle) const {
+	Vec3Df e01 (vertices[triangle.getVertex(1)].getPos() - vertices[triangle.getVertex(0)].getPos());
+	Vec3Df e02 (vertices[triangle.getVertex(2)].getPos() - vertices[triangle.getVertex(0)].getPos());
+	Vec3Df n (Vec3Df::crossProduct(e01, e02));
+	n.normalize();
+	return n;
+}
+
 void Mesh::computeTriangleNormals (vector<Vec3Df> & triangleNormals) {
     for (vector<Triangle>::const_iterator it = triangles.begin ();
          it != triangles.end ();
          it++) {
-        Vec3Df e01 (vertices[it->getVertex (1)].getPos () - vertices[it->getVertex (0)].getPos ());
-        Vec3Df e02 (vertices[it->getVertex (2)].getPos () - vertices[it->getVertex (0)].getPos ());
-        Vec3Df n (Vec3Df::crossProduct (e01, e02));
-        n.normalize ();
-        triangleNormals.push_back (n);
+		triangleNormals.push_back(computeTriangleNormal(*it));
     }
 }
 
