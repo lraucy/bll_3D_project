@@ -9,12 +9,54 @@
 
 class KDTreeNode {
 public:
-    inline KDTreeNode () {}
-	void print();
-    std::vector<unsigned int> data;
-    BoundingBox box;
-    KDTreeNode *left;
-    KDTreeNode *right; 
+  KDTreeNode () {
+	triangles = std::vector<unsigned int>();
+	box = BoundingBox() ;
+	leaves = std::vector<KDTreeNode> ();
+  };
+  /*  inline KDTreeNode& operator= (const KDTreeNode & node) {
+	triangles = std::vector<unsigned int>(node.triangles);
+	box = node.box;
+	std::cout << "Box " << node.box.getMin() << "\n";
+
+	if(node.leaves.size() >= 1){
+	  leaves.push_back(node.leaves[0]);
+	  leaves[0] = node.leaves[0];
+	}
+	if(node.leaves.size() == 2){
+	  leaves.push_back(node.leaves[1]);
+	  leaves[1] = node.leaves[1];
+	}
+	return (*this);
+	};*/
+
+  void setNode(KDTreeNode root){
+	setTriangles(root.triangles);
+	setBox(root.box);
+	if(root.leaves.size() == 1)
+	  {
+		pushBackLeaf(root.leaves[0]);
+		leaves[0] = KDTreeNode();
+		leaves[0].setNode(root.leaves[0]);
+	  }
+	if(root.leaves.size() == 2)
+	  {
+		pushBackLeaf(root.leaves[0]);
+		leaves[0] = KDTreeNode();
+		leaves[0].setNode(root.leaves[0]);
+		pushBackLeaf(root.leaves[1]);
+		leaves[1] = KDTreeNode();
+		leaves[1].setNode(root.leaves[1]);
+	  }
+  }
+  void setTriangles(std::vector<unsigned int> _triangles){triangles = _triangles;}
+  void setBox(BoundingBox _box){box = _box;}
+  void pushBackLeaf(KDTreeNode _leaf) { leaves.push_back(_leaf);}
+
+  void print();
+  std::vector<unsigned int> triangles;
+  BoundingBox box;
+  std::vector<KDTreeNode> leaves;
 };
 
 /*

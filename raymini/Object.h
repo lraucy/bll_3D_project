@@ -14,32 +14,41 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "BoundingBox.h"
+#include "KDTreeNode.h"
 
 class Object {
 public:
     inline Object () {}
     inline Object (const Mesh & mesh, const Material & mat) : mesh (mesh), mat (mat) {
         updateBoundingBox ();
-    }
+	}
     virtual ~Object () {}
 
-    inline const Vec3Df & getTrans () const { return trans;}
-    inline void setTrans (const Vec3Df & t) { trans = t; }
+  inline const Vec3Df & getTrans () const { return trans;}
+  inline void setTrans (const Vec3Df & t) { trans = t; }
 
-    inline const Mesh & getMesh () const { return mesh; }
-    inline Mesh & getMesh () { return mesh; }
+  inline const Mesh & getMesh () const { return mesh; }
+  inline Mesh & getMesh () { return mesh; }
     
-    inline const Material & getMaterial () const { return mat; }
-    inline Material & getMaterial () { return mat; }
+  inline const Material & getMaterial () const { return mat; }
+  inline Material & getMaterial () { return mat; }
+  
+  inline const BoundingBox & getBoundingBox () const { return bbox; }
+  void updateBoundingBox ();
 
-    inline const BoundingBox & getBoundingBox () const { return bbox; }
-    void updateBoundingBox ();
-    
+  inline void setTreeroot(const KDTreeNode &root) {
+	treeroot = root;
+  }
+  inline KDTreeNode getTreeroot() {
+	return treeroot;
+  }
 private:
-    Mesh mesh;
-    Material mat;
-    BoundingBox bbox;
-    Vec3Df trans;
+  Mesh mesh;
+  Material mat;
+  BoundingBox bbox;
+  Vec3Df trans;
+  KDTreeNode treeroot;
+  int testo;
 };
 
 

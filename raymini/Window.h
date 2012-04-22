@@ -29,7 +29,10 @@ public:
     static void showStatusMessage (const QString & msg);  
     
 public slots :
-    void renderRayImage ();
+  void renderRayImageClassic ();
+  void renderRayImageKDTree ();
+  
+    void renderRayImage (unsigned int opt);
     void setBGColor ();
     void showRayImage ();
     void exportGLImage ();

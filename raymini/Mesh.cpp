@@ -184,7 +184,7 @@ void Mesh::loadOFF (const std::string & filename) {
     clear ();
     ifstream input (filename.c_str ());
     if (!input)
-        throw Exception ("Failing opening the file.");
+      throw Exception ("Failing opening the file.");
     string magic_word;
     input >> magic_word;
     if (magic_word != "OFF")

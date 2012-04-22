@@ -10,12 +10,12 @@ HEADERS = Window.h \
           Mesh.h \
           BoundingBox.h \
           Material.h \
-          Object.h \
           Light.h \
           Scene.h \
           RayTracer.h \
           Ray.h \ 
           KDTreeBuilder.h \
+          Object.h \
           KDTreeNode.h 
 
 SOURCES = Window.cpp \
@@ -26,12 +26,12 @@ SOURCES = Window.cpp \
           Mesh.cpp \
           BoundingBox.cpp \
           Material.cpp \
-          Object.cpp \
           Light.cpp \
           Scene.cpp \ 
           RayTracer.cpp \
           Ray.cpp \
           KDTreeBuilder.cpp \
+          Object.cpp \
           KDTreeNode.cpp \
           Main.cpp 
           

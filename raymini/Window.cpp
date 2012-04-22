@@ -62,7 +62,15 @@ Window::~Window () {
 
 }
 
-void Window::renderRayImage () {
+void Window::renderRayImageClassic () {
+  return renderRayImage (0);
+}
+void Window::renderRayImageKDTree () {
+  return renderRayImage (1);
+}
+
+/* if opt == 0 then do not use KDtree, use it otherwise */
+void Window::renderRayImage (unsigned int opt) {
     qglviewer::Camera * cam = viewer->camera ();
     RayTracer * rayTracer = RayTracer::getInstance ();
     qglviewer::Vec p = cam->position ();
@@ -80,7 +88,7 @@ void Window::renderRayImage () {
     QTime timer;
     timer.start ();
     viewer->setRayImage(rayTracer->render (camPos, viewDirection, upVector, rightVector,
-                        fieldOfView, aspectRatio, screenWidth, screenHeight));
+					   fieldOfView, aspectRatio, screenWidth, screenHeight, opt));
     statusBar()->showMessage(QString ("Raytracing performed in ") +
                              QString::number (timer.elapsed ()) +
                              QString ("ms at ") +
@@ -151,9 +159,14 @@ void Window::initControlWidget () {
     
     QGroupBox * rayGroupBox = new QGroupBox ("Ray Tracing", controlWidget);
     QVBoxLayout * rayLayout = new QVBoxLayout (rayGroupBox);
-    QPushButton * rayButton = new QPushButton ("Render", rayGroupBox);
+    QPushButton * rayButton = new QPushButton ("Render without KD-Tree", rayGroupBox);
     rayLayout->addWidget (rayButton);
-    connect (rayButton, SIGNAL (clicked ()), this, SLOT (renderRayImage ()));
+    connect (rayButton, SIGNAL (clicked ()), this, SLOT (renderRayImageClassic ()));
+    
+    QPushButton * rayKDTreeButton = new QPushButton ("Render using KD-Tree", rayGroupBox);
+    rayLayout->addWidget (rayKDTreeButton);
+    connect (rayKDTreeButton, SIGNAL (clicked ()), this, SLOT (renderRayImageKDTree ()));
+    
     QPushButton * showButton = new QPushButton ("Show", rayGroupBox);
     rayLayout->addWidget (showButton);
     connect (showButton, SIGNAL (clicked ()), this, SLOT (showRayImage ()));

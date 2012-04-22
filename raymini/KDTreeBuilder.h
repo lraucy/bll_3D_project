@@ -10,13 +10,14 @@
 #include "Triangle.h"
 #include "KDTreeNode.h"
 
-#define KDTREEBUILDER_MAX_TRIANGLES_PER_LEAF 2
+#define KDTREEBUILDER_MIN_TRIANGLES_PER_LEAF 2
+#define KDTREEBUILDER_MAX_DEPTH 10
 
 class KDTreeBuilder {
 public:
-    inline KDTreeBuilder () {}
-    inline KDTreeNode buildKDTree (const Object & o);
-    KDTreeNode buildKDTreeRec (const BoundingBox & b, const Mesh & mesh, const std::vector<unsigned int> &triangles);
+  inline KDTreeBuilder () {}
+  static KDTreeNode buildKDTree (const Object & o);
+  static KDTreeNode buildKDTreeRec (const BoundingBox & b, const Mesh & mesh, const std::vector<unsigned int> &triangles, unsigned int depth);
 
 private:
 };

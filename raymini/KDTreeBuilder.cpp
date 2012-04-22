@@ -12,29 +12,29 @@ bool containsTriangle (const BoundingBox & b, const Mesh & mesh, const unsigned 
 
 
 /* 0 for x, 1 for y and 2 for z */
-void divideBoundingBox(unsigned int axis, const BoundingBox & b, BoundingBox & up, BoundingBox & down) {
+void divideBoundingBox(unsigned int axis, float splitLeftCoef, const BoundingBox & b, BoundingBox & up, BoundingBox & down) {
     if(axis == 0) {
-	down = BoundingBox(b.getMin(), b.getMin() + Vec3Df(b.getWidth()/2, b.getHeight(), b.getLength()));
-	up =  BoundingBox((b.getMin() + Vec3Df(b.getWidth()/2, 0, 0)), b.getMax());
+	down = BoundingBox(b.getMin(), b.getMin() + Vec3Df(b.getWidth()*splitLeftCoef, b.getHeight(), b.getLength()));
+	up =  BoundingBox((b.getMin() + Vec3Df(b.getWidth()*splitLeftCoef, 0, 0)), b.getMax());
     }
     if(axis == 1) {
-	down = BoundingBox(b.getMin(), b.getMin() + Vec3Df(b.getWidth(), b.getHeight()/2, b.getLength()));
-	up =  BoundingBox((b.getMin() + Vec3Df(0, b.getHeight()/2, 0)), b.getMax());
+      down = BoundingBox(b.getMin(), b.getMin() + Vec3Df(b.getWidth(), b.getHeight()*splitLeftCoef, b.getLength()));
+	up =  BoundingBox((b.getMin() + Vec3Df(0, b.getHeight()*splitLeftCoef, 0)), b.getMax());
     }
     if(axis == 2) {
-	down = BoundingBox(b.getMin(), b.getMin() + Vec3Df(b.getWidth(), b.getHeight(), b.getLength()/2));
-	up =  BoundingBox((b.getMin() + Vec3Df(0, 0, b.getLength()/2)), b.getMax());
+	down = BoundingBox(b.getMin(), b.getMin() + Vec3Df(b.getWidth(), b.getHeight(), b.getLength()*splitLeftCoef));
+	up =  BoundingBox((b.getMin() + Vec3Df(0, 0, b.getLength()*splitLeftCoef)), b.getMax());
     }
 }
 
-unsigned int testDivideBoundingBox(const unsigned int axis, const BoundingBox & b, const Mesh & mesh, const vector<unsigned int> &triangles) {
+unsigned int testDivideBoundingBox(const unsigned int axis, float splitLeftCoef, const BoundingBox & b, const Mesh & mesh, const vector<unsigned int> &triangles, unsigned int & cpt_up, unsigned int & cpt_down) {
     BoundingBox up, down;
-    divideBoundingBox(axis, b, up, down);
+    divideBoundingBox(axis, splitLeftCoef, b, up, down);
     //cout << "DOWN: Min : " << down.getMin() << "   Max : " << down.getMax() << "\n";
     //cout << "UP: Min : " << up.getMin() << "   Max : " << up.getMax() << "\n";
     
-    unsigned int cpt_up = 0;
-    unsigned int cpt_down = 0;
+    cpt_up = 0;
+    cpt_down = 0;
     for (unsigned int i = 0; i<triangles.size(); i++) {
 
 	if(containsTriangle(down, mesh, triangles[i])){
@@ -52,41 +52,61 @@ unsigned int testDivideBoundingBox(const unsigned int axis, const BoundingBox & 
     return abs(cpt_up - cpt_down);
 }
 
+float findBestSplit(const BoundingBox & b, const Mesh & mesh, const vector<unsigned int> &triangles, unsigned int & bestAxis) {
+  unsigned int cpt_up, cpt_down;
+  float bestCoef = 0.0;
+  bestAxis=0;
+  
+  float bestcost = testDivideBoundingBox(bestAxis, bestCoef, b, mesh, triangles, cpt_up, cpt_down) + (cpt_up+cpt_down - triangles.size());
+ 
+  for(unsigned int axis = 0; axis < 3; axis++)
+    {
+ 
+      for (float coef = 0.0; coef <= 1.0; coef = coef + 0.1)
+	{
+	  float cost = testDivideBoundingBox(axis, coef, b, mesh, triangles, cpt_up, cpt_down);
+	  cost += (cpt_up+cpt_down - triangles.size()); 
+	  
+	  
+	  if(cost < bestcost) {
+	    //	    std::cout << "best cost is " << cost << " axis is " << axis << "\n";
+	
+	    bestcost = cost;
+	    bestCoef = coef;
+	    bestAxis = axis;
+	  }
+	}
+    }
+  return bestCoef;
+}
 
-KDTreeNode KDTreeBuilder::buildKDTreeRec (const BoundingBox & b, const Mesh & mesh, const vector<unsigned int> &triangles) {
+
+
+KDTreeNode KDTreeBuilder::buildKDTreeRec (const BoundingBox & box, const Mesh & mesh, const vector<unsigned int> &triangles, unsigned int depth) {
     KDTreeNode node = KDTreeNode ();
-    node.data = triangles;
-    node.box = b;
+    node.setTriangles(triangles);
+    node.setBox(box);
     unsigned int cpt = 0;
-    cout << "\n\n\nNumber of triangles in current node: " << triangles.size() << " box is : min(" << b.getMin() << ") max(" << b.getMax() << ")\n";
+    //cout << "\n\n\nNumber of triangles in current node (depth = "<<depth<<") : " << triangles.size() << " \nBox is : min(" << box.getMin() << ") max(" << box.getMax() << ")\n";
     for (unsigned int i = 0; i<triangles.size(); i++) {
-	std::cout << "   Triangle " << i << " : " << mesh.getVertices()[mesh.getTriangles()[i].getVertex(0)].getPos() << "\n";
-	if(containsTriangle(b, mesh, triangles[i]))
+      //std::cout << "   Triangle " << triangles[i] << " : " << mesh.getVertices()[mesh.getTriangles()[i].getVertex(0)].getPos() << "\n";
+	if(containsTriangle(box, mesh, triangles[i]))
 	    cpt++;
     }
 
-    std::cout << "Cpt = " << cpt << " (should be equal to number of triangles)\n";
-    if(cpt<=KDTREEBUILDER_MAX_TRIANGLES_PER_LEAF) return node;
+    //std::cout << "Cpt = " << cpt << " (should be equal to number of triangles)\n";
+    if(cpt<=KDTREEBUILDER_MIN_TRIANGLES_PER_LEAF || (depth >= KDTREEBUILDER_MAX_DEPTH)) return node;
     
 
     // find best axis (x, y or z) to cut the bounding box
     unsigned int var[3];
     unsigned int best_axis = 0;
-    var[0] = testDivideBoundingBox(0, b, mesh, triangles);
-    var[1] = testDivideBoundingBox(1, b, mesh, triangles);
-    var[2] = testDivideBoundingBox(2, b, mesh, triangles);
-    
-    if((var[0] <= var[1]) && (var[0] <= var[2])){
-	best_axis = 0;
-	cout << "Divide by X axis\n";
-    }
-    else{
-	if(var[1] <= var[2]){ best_axis = 1; cout << "Divide by Y axis\n";}
-	else {best_axis = 2; cout << "Divide by Z axis\n";};
-    }
-
+    unsigned int cpt_down, cpt_up;
     BoundingBox up, down;
-    divideBoundingBox(best_axis, b, up, down);
+    float bestSplitCoef = findBestSplit(box, mesh, triangles, best_axis);
+
+    //std::cout << "Best Split is " << bestSplitCoef << " with axis " << best_axis << " \n";
+    divideBoundingBox(best_axis, bestSplitCoef, box, up, down);
     
     // cut triangles in two parts depending of axis
     vector<unsigned int> left_triangles, right_triangles;
@@ -100,24 +120,20 @@ KDTreeNode KDTreeBuilder::buildKDTreeRec (const BoundingBox & b, const Mesh & me
     }
    
      // call methode for left and right with divided BoudingBox and divided triangles lists (if lists not empty)
-    KDTreeNode left, right;
+    depth++;
     
-    if(left_triangles.size() != 0) left = buildKDTreeRec (down, mesh, left_triangles);
-    if(right_triangles.size() != 0) right = buildKDTreeRec (up, mesh, right_triangles);
     
-    node.left = &left;
-    node.right = &right;
+    if(left_triangles.size() != 0 ) node.pushBackLeaf(buildKDTreeRec (down, mesh, left_triangles, depth));
+    if (right_triangles.size() != 0) node.pushBackLeaf(buildKDTreeRec (up, mesh, right_triangles, depth));
     
     return node;
 }
 
-KDTreeNode KDTreeBuilder::buildKDTree (const Object & o) {
-    // get the Mesh of o
-    // get triangle list of mesh
-    // get bounding box of o
-    
-    // call buildKDTreeRec with previous argument
-
-    // return root node
+KDTreeNode KDTreeBuilder::buildKDTree (const Object & o) {  
+  vector<unsigned int> triangles;
+  for(unsigned int i = 0; i < o.getMesh().getTriangles().size(); i++)
+    triangles.push_back(i);
+  KDTreeNode root = buildKDTreeRec (o.getBoundingBox(), o.getMesh(), triangles, 0);
+  return root;
 }
 

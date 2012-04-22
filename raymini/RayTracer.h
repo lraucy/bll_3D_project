@@ -29,7 +29,8 @@ public:
                    float fieldOfView,
                    float aspectRatio,
                    unsigned int screenWidth,
-                   unsigned int screenHeight);
+                   unsigned int screenHeight,
+				   unsigned int opt);
     
 protected:
     inline RayTracer () {}
