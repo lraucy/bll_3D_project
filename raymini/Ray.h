@@ -30,7 +30,7 @@ public:
 
     bool intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
     bool intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & intersectionPoint) const;
-    bool intersect (const Mesh & mesh, KdTreeElement *kdTree, Vec3Df & intersectionPoint, float &intersectionDistance) const;
+  bool intersect (const Mesh & mesh, KdTreeElement *kdTree, Vec3Df & intersectionPoint, float &intersectionDistance, Triangle &triangle) const;
     
 private:
     Vec3Df origin;

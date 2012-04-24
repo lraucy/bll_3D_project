@@ -64,16 +64,52 @@ QImage RayTracer::render (const Vec3Df & camPos,
             float smallestIntersectionDistance = 1000000.f;
             Vec3Df c (backgroundColor);
 
-			bool hasIntersection = false;
+	    bool hasIntersection = false;
+	    Triangle triangle;
+	    unsigned int objectIntersected;
 
             for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
                 const Object & o = scene->getObjects()[k];
                 Ray ray (camPos-o.getTrans (), dir);
-				hasIntersection |= ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPoint, smallestIntersectionDistance);
-            }
-			if(hasIntersection)
-				c = 255.f * ((intersectionPoint - minBb) / rangeBb);
+		
+		if(ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPoint, smallestIntersectionDistance, triangle)){
+		  hasIntersection |= true;
+		  objectIntersected = k;
+		}
+	    }
+	    if(hasIntersection){
+	      const Object & o = scene->getObjects()[objectIntersected];
+              Ray ray (camPos-o.getTrans (), dir);	      	      
+	      Vec3Df triangleCoo[3] = {o.getMesh().getVertices()[triangle.getVertex(0)].getPos(), 
+				       o.getMesh().getVertices()[triangle.getVertex(1)].getPos(),
+				       o.getMesh().getVertices()[triangle.getVertex(2)].getPos()};
+	      
+	      Vec3Df baricentricCoo = Triangle::getBaricentricCoo(triangleCoo, intersectionPoint);
+    
 
+	      Vec3Df normal = baricentricCoo[0]*o.getMesh().getVertices()[triangle.getVertex(0)].getNormal() + 
+		  baricentricCoo[1]*o.getMesh().getVertices()[triangle.getVertex(1)].getNormal() +   
+		  baricentricCoo[2]*o.getMesh().getVertices()[triangle.getVertex(2)].getNormal();
+		
+	      
+		normal.normalize();
+		Vec3Df lightVector = intersectionPoint - scene->getLights()[0].getPos();
+		lightVector.normalize();
+		float w_i = std::max(Vec3Df::dotProduct(normal, lightVector), (float) 0);
+		
+		Vec3Df colorVect;
+		float diffuseRef = o.getMaterial().getDiffuse();
+		float specRef = o.getMaterial().getSpecular();
+		float shininess = 16.0f;
+	         
+		colorVect = o.getMaterial().getColor();
+		
+		float color = diffuseRef*w_i + specRef*pow(std::max(Vec3Df::dotProduct(Vec3Df::crossProduct(normal, lightVector), ray.getDirection()), (float)0.0), shininess);
+		
+		color = 255-color*255;
+		c = Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
+
+	    }
             image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
         }
     }
