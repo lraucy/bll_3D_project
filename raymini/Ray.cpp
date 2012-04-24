@@ -119,8 +119,8 @@ bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree, Vec3Df &intersecti
 					intersectionDistance = intersectionDistCurrent;
 					intersectionPoint = triangleIntersection;
 					triangle = kdTree->triangles[i];
+					returnValue = true;
 				}
-				returnValue = true;
 			}
 		}
 		if(kdTree->leftChild != NULL)

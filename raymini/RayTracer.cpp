@@ -73,7 +73,7 @@ QImage RayTracer::render (const Vec3Df & camPos,
                 Ray ray (camPos-o.getTrans (), dir);
 		
 		if(ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPoint, smallestIntersectionDistance, triangle)){
-		  hasIntersection |= true;
+		  hasIntersection = true;
 		  objectIntersected = k;
 		}
 	    }
