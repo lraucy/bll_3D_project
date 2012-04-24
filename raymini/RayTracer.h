@@ -13,6 +13,8 @@
 #include <QImage>
 
 #include "Vec3D.h"
+#include "Ray.h"
+#include "Object.h"
 
 class RayTracer {
 public:

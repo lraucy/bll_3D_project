@@ -67,6 +67,9 @@ void Scene::buildDefaultScene () {
     Object garg (gargMesh, gargMat);
     garg.setTrans (Vec3Df (-1.f, 1.0f, 0.1f));
     objects.push_back (garg);
+	for (unsigned int i = 0; i < objects.size(); i++)
+		objects[i].getMesh().buildKdTree();
+
     Light l (Vec3Df (3.0f, 3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
     lights.push_back (l);
 }

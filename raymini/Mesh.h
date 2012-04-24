@@ -14,20 +14,24 @@
 #include "Vertex.h"
 #include "Triangle.h"
 #include "Edge.h"
+#include "KdTreeElement.h"
+
+#include "BoundingBox.h"
+
 
 class Mesh {
 public:
-    inline Mesh () {} 
+    inline Mesh () { kdTree = NULL; } 
     inline Mesh (const std::vector<Vertex> & v) 
-        : vertices (v) {}
+        : vertices (v) { kdTree = NULL; }
     inline Mesh (const std::vector<Vertex> & v, 
                  const std::vector<Triangle> & t) 
-        : vertices (v), triangles (t)  {}
+        : vertices (v), triangles (t)  {kdTree = NULL; }
     inline Mesh (const Mesh & mesh) 
         : vertices (mesh.vertices), 
-          triangles (mesh.triangles) {}
+          triangles (mesh.triangles) {kdTree = NULL; }
         
-    inline virtual ~Mesh () {}
+    inline virtual ~Mesh () { if (this->kdTree != NULL) delete this->kdTree;}
     std::vector<Vertex> & getVertices () { return vertices; }
     const std::vector<Vertex> & getVertices () const { return vertices; }
     std::vector<Triangle> & getTriangles () { return triangles; }
@@ -42,10 +46,14 @@ public:
     void collectOrderedOneRing (std::vector<std::vector<unsigned int> > & oneRing) const;
     void computeDualEdgeMap (EdgeMapIndex & dualVMap1, EdgeMapIndex & dualVMap2);
     void markBorderEdges (EdgeMapIndex & edgeMap);
+	float getMedian(unsigned int axe, const BoundingBox & bb) const;
+	void buildKdTree();
     
     void renderGL (bool flat) const;
     
     void loadOFF (const std::string & filename);
+
+	KdTreeElement * kdTree;
   
     class Exception {
     private: 

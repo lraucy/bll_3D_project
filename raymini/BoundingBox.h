@@ -38,6 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 
 #include "Vec3D.h"
+#include "Mesh.h"
+#include "Triangle.h"
 
 const float BOUNDINGBOX_EPSILON = 0.0001f;
 
@@ -46,6 +48,7 @@ public:
     BoundingBox () : minBb (Vec3Df (0.0f, 0.0f, 0.0f)), maxBb (Vec3Df (0.0f, 0.0f, 0.0f)) {}
     BoundingBox (const Vec3Df & p) : minBb (p), maxBb (p) {}
     BoundingBox (const Vec3Df & min, const Vec3Df & max) : minBb (min), maxBb (max) {}
+	BoundingBox (const Mesh & mesh, std::vector<Triangle> & triangles);
 
     inline void init (const Vec3Df & p) {
         minBb = maxBb = p;
@@ -134,6 +137,17 @@ public:
         splitBoundingBoxArray[7] = BoundingBox (minBb + Vec3Df (x_2, y_2, z_2), med + Vec3Df (x_2, y_2, z_2));
     }
     bool intersectRay (const Vec3Df & origin, const Vec3Df & direction, Vec3Df & intersection) const;
+
+	inline void split (unsigned int axe, float whereToSplit, BoundingBox & bbLeft, BoundingBox & bbRight) {
+		Vec3Df maxLeftBb = this->maxBb;
+		maxLeftBb[axe] = whereToSplit;
+		Vec3Df minRightBb = this->minBb;
+		minRightBb[axe] = whereToSplit;
+
+		bbLeft = BoundingBox(minBb, maxLeftBb);
+		bbRight = BoundingBox(minRightBb, maxBb);
+	}
+	unsigned int biggerAxe();
 
 private:
     inline float getWHL (unsigned int i) const {

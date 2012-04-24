@@ -9,6 +9,7 @@
 #include "Ray.h"
 #include "Scene.h"
 #include <QProgressDialog>
+#include "KdTreeElement.h"
 
 static RayTracer * instance = NULL;
 
@@ -62,21 +63,17 @@ QImage RayTracer::render (const Vec3Df & camPos,
             Vec3Df intersectionPoint;
             float smallestIntersectionDistance = 1000000.f;
             Vec3Df c (backgroundColor);
+
+			bool hasIntersection = false;
+
             for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
                 const Object & o = scene->getObjects()[k];
                 Ray ray (camPos-o.getTrans (), dir);
-				for (unsigned int m = 0; m < o.getMesh().getTriangles().size(); m++) {
-					bool hasIntersection = ray.intersect(o.getMesh(), o.getMesh().getTriangles()[m], intersectionPoint);
-					if (hasIntersection) {
-						float intersectionDistance = Vec3Df::squaredDistance (intersectionPoint
-								+ o.getTrans (), camPos);
-						if (intersectionDistance < smallestIntersectionDistance) {
-							c = 255.f * ((intersectionPoint - minBb) / rangeBb);
-							smallestIntersectionDistance = intersectionDistance;
-						}
-					}
-				}
+				hasIntersection |= ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPoint, smallestIntersectionDistance);
             }
+			if(hasIntersection)
+				c = 255.f * ((intersectionPoint - minBb) / rangeBb);
+
             image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
         }
     }

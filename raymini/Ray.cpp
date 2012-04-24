@@ -104,3 +104,29 @@ bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & inte
 	else
 		return true;
 }
+
+bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree, Vec3Df &intersectionPoint, float &intersectionDistance) const {
+	bool returnValue = false;
+
+	Vec3Df bbIntersection;
+	Vec3Df triangleIntersection;
+	if(this->intersect(*kdTree->boundingBox, bbIntersection)) {
+		for(unsigned int i = 0; i < kdTree->triangles.size(); i++) {
+			if(this->intersect(mesh, kdTree->triangles[i], triangleIntersection)) {
+				float intersectionDistCurrent = Vec3Df::squaredDistance(triangleIntersection,
+						this->origin);
+				if(intersectionDistCurrent < intersectionDistance) {
+					intersectionDistance = intersectionDistCurrent;
+					intersectionPoint = triangleIntersection;
+				}
+				returnValue = true;
+			}
+		}
+		if(kdTree->leftChild != NULL)
+			returnValue |= this->intersect(mesh, kdTree->leftChild, intersectionPoint, intersectionDistance);
+		if(kdTree->rightChild != NULL)
+			returnValue |= this->intersect(mesh, kdTree->rightChild, intersectionPoint, intersectionDistance);
+	}
+
+	return returnValue;
+}

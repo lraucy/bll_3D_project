@@ -33,3 +33,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BoundingBox.h"
 
+/**
+ * This function is used to create a bounding box large enough to include all triangles in vector triangles
+ * from index begin to end
+ */
+BoundingBox::BoundingBox (const Mesh & mesh, std::vector<Triangle> & triangles) {
+	const std::vector<Vertex> & vertices = mesh.getVertices();
+
+	this->minBb = vertices[triangles[0].getVertex(0)].getPos();
+	this->maxBb = this->minBb;
+	for(unsigned int i = 0; i < triangles.size(); i++) {
+		for (unsigned int j = 0; j < 3; j++) {
+			this->extendTo(vertices[triangles[i].getVertex(j)].getPos());
+		}
+	}
+}
+
+unsigned int BoundingBox::biggerAxe() {
+	Vec3Df axes = (this->maxBb - this->minBb);
+	unsigned int axe = 0;
+	if (axes[0] < axes[1])
+		axe = 1;
+	if (axes[axe] < axes[2])
+		axe = 2;
+
+	return axe;
+}

@@ -142,6 +142,21 @@ void Mesh::markBorderEdges (EdgeMapIndex & edgeMap) {
     } 
 }
 
+float Mesh::getMedian(unsigned int axe, const BoundingBox &bb) const {
+	std::vector<float> listVertexes;
+	for (unsigned int i = 0; i < vertices.size(); i++) {
+		if(bb.contains(vertices[i].getPos()))
+			listVertexes.push_back(vertices[i].getPos()[axe]);
+	}
+	std::nth_element(listVertexes.begin(), listVertexes.begin() + listVertexes.size()/2, listVertexes.end());
+	return listVertexes[listVertexes.size()/2];
+}
+
+
+void Mesh::buildKdTree() {
+	this->kdTree = KdTreeElement::getKdTreeElement(*this, this->triangles);
+}
+
 inline void glVertexVec3Df (const Vec3Df & v) {
     glVertex3f (v[0], v[1], v[2]);
 }
