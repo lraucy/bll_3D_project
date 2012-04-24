@@ -44,10 +44,6 @@ QImage RayTracer::render (const Vec3Df & camPos,
                           unsigned int screenHeight) {
     QImage image (QSize (screenWidth, screenHeight), QImage::Format_RGB888);
     Scene * scene = Scene::getInstance ();
-    const BoundingBox & bbox = scene->getBoundingBox ();
-    const Vec3Df & minBb = bbox.getMin ();
-    const Vec3Df & maxBb = bbox.getMax ();
-    const Vec3Df rangeBb = maxBb - minBb;
     QProgressDialog progressDialog ("Raytracing...", "Cancel", 0, 100);
     progressDialog.show ();
     for (unsigned int i = 0; i < screenWidth; i++) {
@@ -78,20 +74,19 @@ QImage RayTracer::render (const Vec3Df & camPos,
 		}
 	    }
 	    if(hasIntersection){
-	      const Object & o = scene->getObjects()[objectIntersected];
-              Ray ray (camPos-o.getTrans (), dir);	      	      
-	      Vec3Df triangleCoo[3] = {o.getMesh().getVertices()[triangle.getVertex(0)].getPos(), 
-				       o.getMesh().getVertices()[triangle.getVertex(1)].getPos(),
-				       o.getMesh().getVertices()[triangle.getVertex(2)].getPos()};
+			const Object & o = scene->getObjects()[objectIntersected];
+			const Vertex & v0 = o.getMesh().getVertices()[triangle.getVertex(0)];
+			const Vertex & v1 = o.getMesh().getVertices()[triangle.getVertex(1)];
+			const Vertex & v2 = o.getMesh().getVertices()[triangle.getVertex(2)];
+			Vec3Df triangleCoo[3] = {v0.getPos(), v1.getPos(), v2.getPos()};
+			Ray ray (camPos-o.getTrans (), dir);
 	      
-	      Vec3Df baricentricCoo = Triangle::getBaricentricCoo(triangleCoo, intersectionPoint);
+			Vec3Df barycentricCoo = Triangle::getBarycentricCoo(triangleCoo, intersectionPoint);
     
-
-	      Vec3Df normal = baricentricCoo[0]*o.getMesh().getVertices()[triangle.getVertex(0)].getNormal() + 
-		  baricentricCoo[1]*o.getMesh().getVertices()[triangle.getVertex(1)].getNormal() +   
-		  baricentricCoo[2]*o.getMesh().getVertices()[triangle.getVertex(2)].getNormal();
+			Vec3Df normal = barycentricCoo[0]*v0.getNormal() +
+							barycentricCoo[1]*v1.getNormal() +
+							barycentricCoo[2]*v2.getNormal();
 		
-	      
 		normal.normalize();
 		Vec3Df lightVector = intersectionPoint - scene->getLights()[0].getPos();
 		lightVector.normalize();

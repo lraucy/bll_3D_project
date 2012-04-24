@@ -24,7 +24,7 @@ public:
     inline unsigned int getVertex (unsigned int i) const { return v[i]; }
     inline void setVertex (unsigned int i, unsigned int vertex) { v[i] = vertex; }
     inline bool contains (unsigned int vertex) const { return (v[0] == vertex || v[1] == vertex || v[2] == vertex); }
-  static Vec3Df getBaricentricCoo(const Vec3Df triangle[3], const Vec3Df &point);
+  static Vec3Df getBarycentricCoo(const Vec3Df triangle[3], const Vec3Df &point);
 
 protected:
     inline void init (unsigned int v0, unsigned int v1, unsigned int v2) {
