@@ -38,18 +38,28 @@ public:
 protected:
     inline RayTracer () {}
     inline virtual ~RayTracer () {}
-	const Object * getObjectIntersected(const Scene * scene, const Vec3Df &camPos,
-									const Vec3Df &dir, Vec3Df &intersectionPoint,
-									Triangle &intersectionTriangle) const;
+	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
+			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
 
 	Vec3Df getNormalAtIntersection(const Object &o, const Vec3Df &intersectionPoint,
 										const Triangle &triangle) const;
 
-	Vec3Df getPhongBRDF(const Scene * scene, const Ray &ray, const Object &o,
+	Vec3Df getPhongBRDF(const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
+
+	Vec3Df getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColorFromPixel(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColorFromPixelWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColorFromPixelWithAAx3(const Vec3Df &camPos, const Vec3Df &dir) const;
     
 private:
     Vec3Df backgroundColor;
+	unsigned int screenWidth;
+	unsigned int screenHeight;
+	Vec3Df upVector;
+	Vec3Df rightVector;
+	float tanX;
+	float tanY;
 };
 
 

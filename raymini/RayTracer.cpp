@@ -42,36 +42,27 @@ QImage RayTracer::render (const Vec3Df & camPos,
 		float aspectRatio,
 		unsigned int screenWidth,
 		unsigned int screenHeight) {
+
+	this->screenWidth = screenWidth;
+	this->screenHeight = screenHeight;
+	this->upVector = upVector;
+	this->rightVector = rightVector;
 	QImage image (QSize (screenWidth, screenHeight), QImage::Format_RGB888);
-	Scene * scene = Scene::getInstance ();
 	QProgressDialog progressDialog ("Raytracing...", "Cancel", 0, 100);
 	progressDialog.show ();
 	for (unsigned int i = 0; i < screenWidth; i++) {
 		progressDialog.setValue ((100*i)/screenWidth);
 		for (unsigned int j = 0; j < screenHeight; j++) {
-			float tanX = tan (fieldOfView)*aspectRatio;
-			float tanY = tan (fieldOfView);
+			tanX = tan (fieldOfView)*aspectRatio;
+			tanY = tan (fieldOfView);
 			Vec3Df stepX = (float (i) - screenWidth/2.f)/screenWidth * tanX * rightVector;
 			Vec3Df stepY = (float (j) - screenHeight/2.f)/screenHeight * tanY * upVector;
 			Vec3Df step = stepX + stepY;
 			Vec3Df dir = direction + step;
 			dir.normalize ();
-			Vec3Df c (backgroundColor);
 
-			Triangle intersectionTriangle;
-			Vec3Df intersectionPoint;
-			const Object * objectIntersected = NULL;
+			Vec3Df c = getColorFromPixelWithAAx3(camPos, dir);
 
-			objectIntersected = getObjectIntersected(scene, camPos, dir, intersectionPoint,
-					intersectionTriangle);
-
-			if(objectIntersected != NULL){
-				Ray ray (camPos-objectIntersected->getTrans (), dir);
-				Vec3Df normal = getNormalAtIntersection(*objectIntersected,
-													intersectionPoint, intersectionTriangle);
-
-				c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
-			}
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
 	}
@@ -79,9 +70,10 @@ QImage RayTracer::render (const Vec3Df & camPos,
 	return image;
 }
 
-const Object * RayTracer::getObjectIntersected(const Scene * scene, const Vec3Df &camPos,
-									const Vec3Df &dir, Vec3Df &intersectionPoint,
-									Triangle &intersectionTriangle) const{
+const Object * RayTracer::getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
+							Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const{
+
+	Scene * scene = Scene::getInstance();
 
 	float smallestIntersectionDistance = 1000000.f;
 	const Object *objectIntersected = NULL;
@@ -112,8 +104,10 @@ Vec3Df RayTracer::getNormalAtIntersection(const Object &o, const Vec3Df &interse
 	return normal;
 }
 
-Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object &o,
-		const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
+Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &intersectionPoint,
+					const Vec3Df &normal) const{
+
+	Scene * scene = Scene::getInstance();
 
 	Vec3Df toLight = scene->getLights()[0].getPos() - intersectionPoint;
 	toLight.normalize();
@@ -134,3 +128,48 @@ Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object
 	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
 }
 
+Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const {
+	Vec3Df c (backgroundColor);
+	
+	Triangle intersectionTriangle;
+	Vec3Df intersectionPoint;
+	const Object * objectIntersected = NULL;
+
+	objectIntersected = getObjectIntersected(camPos, dir, intersectionPoint,
+			intersectionTriangle);
+	if(objectIntersected != NULL) {
+		Ray ray (camPos - objectIntersected->getTrans(), dir);
+		Vec3Df normal = getNormalAtIntersection(*objectIntersected, intersectionPoint,
+				intersectionTriangle);
+		c = getPhongBRDF(ray, *objectIntersected, intersectionPoint, normal);
+	}
+	return c;
+}
+
+Vec3Df RayTracer::getColorFromPixel(const Vec3Df &camPos, const Vec3Df &dir) const {
+	return getColorFromRay(camPos, dir);
+}
+
+Vec3Df RayTracer::getColorFromPixelWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const {
+	Vec3Df color = Vec3Df(0.0f, 0.0f, 0.0f);
+	for (unsigned int i = 0; i < 2; i++) {
+		for (unsigned int j = 0; j < 2; j++) {
+			Vec3Df aaDir = dir + (0.5 - i)*tanX*rightVector/(2.0*screenWidth)
+				+ (0.5 - j)*tanY*upVector/(2.0*screenHeight);
+			color += getColorFromRay(camPos, aaDir);
+		}
+	}
+	return color / 4;
+}
+
+Vec3Df RayTracer::getColorFromPixelWithAAx3(const Vec3Df &camPos, const Vec3Df &dir) const {
+	Vec3Df color = Vec3Df(0.0f, 0.0f, 0.0f);
+	for (int i = -1; i < 2; i++) {
+		for (int j = -1; j < 2; j++) {
+			Vec3Df aaDir = dir + i*tanX*rightVector/(4.0*screenWidth)
+				+ j*tanY*upVector/(4.0*screenHeight);
+			color += getColorFromRay(camPos, aaDir);
+		}
+	}
+	return color / 9;
+}
