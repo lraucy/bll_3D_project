@@ -42,21 +42,26 @@ QImage RayTracer::render (const Vec3Df & camPos,
 		float aspectRatio,
 		unsigned int screenWidth,
 		unsigned int screenHeight) {
+
+	this->screenWidth = screenWidth;
+	this->screenHeight = screenHeight;
+	this->upVector = upVector;
+	this->rightVector = rightVector;
 	QImage image (QSize (screenWidth, screenHeight), QImage::Format_RGB888);
 	QProgressDialog progressDialog ("Raytracing...", "Cancel", 0, 100);
 	progressDialog.show ();
 	for (unsigned int i = 0; i < screenWidth; i++) {
 		progressDialog.setValue ((100*i)/screenWidth);
 		for (unsigned int j = 0; j < screenHeight; j++) {
-			float tanX = tan (fieldOfView)*aspectRatio;
-			float tanY = tan (fieldOfView);
+			tanX = tan (fieldOfView)*aspectRatio;
+			tanY = tan (fieldOfView);
 			Vec3Df stepX = (float (i) - screenWidth/2.f)/screenWidth * tanX * rightVector;
 			Vec3Df stepY = (float (j) - screenHeight/2.f)/screenHeight * tanY * upVector;
 			Vec3Df step = stepX + stepY;
 			Vec3Df dir = direction + step;
 			dir.normalize ();
 
-			Vec3Df c = rayTrace(camPos, dir);
+			Vec3Df c = getColorWithAAx2(camPos, dir);
 
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
@@ -141,3 +146,17 @@ Vec3Df RayTracer::rayTrace(const Vec3Df &camPos, const Vec3Df &dir) const {
 	return c;
 }
 
+Vec3Df RayTracer::getColor(const Vec3Df &camPos, const Vec3Df &dir) const {
+	return rayTrace(camPos, dir);
+}
+Vec3Df RayTracer::getColorWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const {
+	Vec3Df color = Vec3Df(0.0f, 0.0f, 0.0f);
+	for (unsigned int i = 0; i < 2; i++) {
+		for (unsigned int j = 0; j < 2; j++) {
+			Vec3Df aaDir = dir + (0.5 - i)*tanX*rightVector/(2.0*screenWidth)
+				+ (0.5 - j)*tanY*upVector/(2.0*screenHeight);
+			color += rayTrace(camPos, aaDir);
+		}
+	}
+	return color / 4;
+}

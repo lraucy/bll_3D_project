@@ -48,9 +48,17 @@ protected:
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
 
 	Vec3Df rayTrace(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColor(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColorWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const;
     
 private:
     Vec3Df backgroundColor;
+	unsigned int screenWidth;
+	unsigned int screenHeight;
+	Vec3Df upVector;
+	Vec3Df rightVector;
+	float tanX;
+	float tanY;
 };
 
 
