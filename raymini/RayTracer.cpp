@@ -1,4 +1,4 @@
-// *********************************************************
+ // *********************************************************
 // Ray Tracer Class
 // Author : Tamy Boubekeur (boubek@gmail.com).
 // Copyright (C) 2012 Tamy Boubekeur.
@@ -114,9 +114,13 @@ Vec3Df RayTracer::getNormalAtIntersection(const Object &o, const Vec3Df &interse
 
 Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object &o,
 		const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
-	Vec3Df lightVector = intersectionPoint - scene->getLights()[0].getPos();
-	lightVector.normalize();
-	float w_i = std::max(Vec3Df::dotProduct(normal, lightVector), (float) 0);
+
+	Vec3Df toLight = scene->getLights()[0].getPos() - intersectionPoint;
+	toLight.normalize();
+	Vec3Df r = (ray.getOrigin() -intersectionPoint);
+	r.normalize();
+	Vec3Df ref = 2*Vec3Df::dotProduct(normal, toLight)*normal - toLight;
+	ref.normalize();
 
 	float diffuseRef = o.getMaterial().getDiffuse();
 	float specRef = o.getMaterial().getSpecular();
@@ -124,9 +128,9 @@ Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object
 
 	Vec3Df colorVect = o.getMaterial().getColor();
 
-	float color = diffuseRef*w_i + specRef*pow(std::max(Vec3Df::dotProduct(Vec3Df::crossProduct(normal, lightVector), ray.getDirection()), (float)0.0), shininess);
+	float color = specRef * pow(std::max(Vec3Df::dotProduct(ref, r), 0.0f), shininess) + diffuseRef*std::max(Vec3Df::dotProduct(toLight, normal), 0.0f);
 
-	color = 255-color*255;
+	color = color*255;
 	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
 }
 
