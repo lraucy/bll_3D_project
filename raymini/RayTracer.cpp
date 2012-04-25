@@ -67,10 +67,12 @@ QImage RayTracer::render (const Vec3Df & camPos,
 
 			if(objectIntersected != NULL){
 				Ray ray (camPos-objectIntersected->getTrans (), dir);
-				Vec3Df normal = getNormalAtIntersection(*objectIntersected,
-													intersectionPoint, intersectionTriangle);
-
-				c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
+				if(shadowRay(scene, ray, intersectionPoint))
+				  c = Vec3Df(0, 0, 0);
+				else{
+				  Vec3Df normal = getNormalAtIntersection(*objectIntersected,												intersectionPoint, intersectionTriangle);
+				  c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
+				}
 			}
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
@@ -134,3 +136,22 @@ Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object
 	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
 }
 
+bool RayTracer::shadowRay(const Scene * scene, const Ray &ray, 
+	       const Vec3Df &intersectionPoint) const{
+  Triangle intersectionTriangleShadow;
+  Vec3Df intersectionPointShadow;
+  float epsilon = 0.1;
+  float smallestIntersectionDistanceShadow = 1000000.f;
+  bool hasIntersectionShadow = false;
+
+  Vec3Df shadowRayDirection = scene->getLights()[0].getPos() - intersectionPoint;
+  shadowRayDirection.normalize();
+
+  for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
+    const Object & o = scene->getObjects()[k];
+    Ray ray (intersectionPoint + epsilon * shadowRayDirection - o.getTrans (), shadowRayDirection);
+    if(ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPointShadow, smallestIntersectionDistanceShadow, intersectionTriangleShadow))
+      hasIntersectionShadow = true;
+  }
+  return hasIntersectionShadow;
+}
