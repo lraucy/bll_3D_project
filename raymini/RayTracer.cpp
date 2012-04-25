@@ -43,7 +43,6 @@ QImage RayTracer::render (const Vec3Df & camPos,
 		unsigned int screenWidth,
 		unsigned int screenHeight) {
 	QImage image (QSize (screenWidth, screenHeight), QImage::Format_RGB888);
-	Scene * scene = Scene::getInstance ();
 	QProgressDialog progressDialog ("Raytracing...", "Cancel", 0, 100);
 	progressDialog.show ();
 	for (unsigned int i = 0; i < screenWidth; i++) {
@@ -56,22 +55,9 @@ QImage RayTracer::render (const Vec3Df & camPos,
 			Vec3Df step = stepX + stepY;
 			Vec3Df dir = direction + step;
 			dir.normalize ();
-			Vec3Df c (backgroundColor);
 
-			Triangle intersectionTriangle;
-			Vec3Df intersectionPoint;
-			const Object * objectIntersected = NULL;
+			Vec3Df c = rayTrace(camPos, dir);
 
-			objectIntersected = getObjectIntersected(scene, camPos, dir, intersectionPoint,
-					intersectionTriangle);
-
-			if(objectIntersected != NULL){
-				Ray ray (camPos-objectIntersected->getTrans (), dir);
-				Vec3Df normal = getNormalAtIntersection(*objectIntersected,
-													intersectionPoint, intersectionTriangle);
-
-				c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
-			}
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
 	}
@@ -79,9 +65,10 @@ QImage RayTracer::render (const Vec3Df & camPos,
 	return image;
 }
 
-const Object * RayTracer::getObjectIntersected(const Scene * scene, const Vec3Df &camPos,
-									const Vec3Df &dir, Vec3Df &intersectionPoint,
-									Triangle &intersectionTriangle) const{
+const Object * RayTracer::getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
+							Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const{
+
+	Scene * scene = Scene::getInstance();
 
 	float smallestIntersectionDistance = 1000000.f;
 	const Object *objectIntersected = NULL;
@@ -112,8 +99,10 @@ Vec3Df RayTracer::getNormalAtIntersection(const Object &o, const Vec3Df &interse
 	return normal;
 }
 
-Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object &o,
-		const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
+Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &intersectionPoint,
+					const Vec3Df &normal) const{
+
+	Scene * scene = Scene::getInstance();
 
 	Vec3Df toLight = scene->getLights()[0].getPos() - intersectionPoint;
 	toLight.normalize();
@@ -132,5 +121,23 @@ Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object
 
 	color = color*255;
 	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
+}
+
+Vec3Df RayTracer::rayTrace(const Vec3Df &camPos, const Vec3Df &dir) const {
+	Vec3Df c (backgroundColor);
+	
+	Triangle intersectionTriangle;
+	Vec3Df intersectionPoint;
+	const Object * objectIntersected = NULL;
+
+	objectIntersected = getObjectIntersected(camPos, dir, intersectionPoint,
+			intersectionTriangle);
+	if(objectIntersected != NULL) {
+		Ray ray (camPos - objectIntersected->getTrans(), dir);
+		Vec3Df normal = getNormalAtIntersection(*objectIntersected, intersectionPoint,
+				intersectionTriangle);
+		c = getPhongBRDF(ray, *objectIntersected, intersectionPoint, normal);
+	}
+	return c;
 }
 
