@@ -67,12 +67,10 @@ QImage RayTracer::render (const Vec3Df & camPos,
 
 			if(objectIntersected != NULL){
 				Ray ray (camPos-objectIntersected->getTrans (), dir);
-				if(shadowRay(scene, ray, intersectionPoint))
-				  c = Vec3Df(0, 0, 0);
-				else{
-				  Vec3Df normal = getNormalAtIntersection(*objectIntersected,												intersectionPoint, intersectionTriangle);
-				  c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
-				}
+				float coef = softShadowRay(scene, intersectionPoint, 10);
+				Vec3Df normal = getNormalAtIntersection(*objectIntersected, intersectionPoint, intersectionTriangle);
+				c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
+				c = c * Vec3Df(coef, coef, coef);
 			}
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
@@ -136,7 +134,7 @@ Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object
 	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
 }
 
-bool RayTracer::shadowRay(const Scene * scene, const Ray &ray, 
+bool RayTracer::shadowRay(const Scene * scene, 
 	       const Vec3Df &intersectionPoint) const{
   Triangle intersectionTriangleShadow;
   Vec3Df intersectionPointShadow;
@@ -155,3 +153,32 @@ bool RayTracer::shadowRay(const Scene * scene, const Ray &ray,
   }
   return hasIntersectionShadow;
 }
+
+float RayTracer::softShadowRay(const Scene * scene, 
+			       const Vec3Df &intersectionPoint, 
+			       const unsigned int nbSamples) const{
+  Triangle intersectionTriangleShadow;
+  Vec3Df intersectionPointShadow;
+  float epsilon = 0.1;
+  float smallestIntersectionDistanceShadow = 1000000.f;
+  float counter = 0;
+  
+  for(unsigned int i = 0; i < nbSamples; i++){
+    float smallestIntersectionDistanceShadow = 1000000.f;
+    Vec3Df shadowRayDirection = ((scene->getLights()[0].getPos() + 
+				 Vec3Df((rand()/(double)RAND_MAX) * scene->getLights()[0].getRadius(),
+					(rand()/(double)RAND_MAX) * scene->getLights()[0].getRadius(),
+					(rand()/(double)RAND_MAX) * scene->getLights()[0].getRadius()))
+				 - intersectionPoint);
+    shadowRayDirection.normalize();
+    for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
+      const Object & o = scene->getObjects()[k];
+      Ray ray (intersectionPoint + epsilon * shadowRayDirection - o.getTrans (), shadowRayDirection);
+      if(ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPointShadow, smallestIntersectionDistanceShadow, intersectionTriangleShadow))
+	counter += (1./nbSamples);
+    }
+  }
+
+  return 1. - counter;
+}
+

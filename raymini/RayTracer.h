@@ -48,9 +48,12 @@ protected:
 	Vec3Df getPhongBRDF(const Scene * scene, const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
   
-	bool shadowRay(const Scene * scene, const Ray &ray, 
+	bool shadowRay(const Scene * scene, 
 				   const Vec3Df &intersectionPoint) const;
-    
+  
+    float softShadowRay(const Scene * scene, 
+						const Vec3Df &intersectionPoint, 
+						const unsigned int nbSamples) const;    
 private:
     Vec3Df backgroundColor;
 };
