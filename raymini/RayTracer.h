@@ -16,6 +16,8 @@
 #include "Ray.h"
 #include "Object.h"
 
+class Scene;
+
 class RayTracer {
 public:
     static RayTracer * getInstance ();
@@ -36,6 +38,15 @@ public:
 protected:
     inline RayTracer () {}
     inline virtual ~RayTracer () {}
+	const Object * getObjectIntersected(const Scene * scene, const Vec3Df &camPos,
+									const Vec3Df &dir, Vec3Df &intersectionPoint,
+									Triangle &intersectionTriangle) const;
+
+	Vec3Df getNormalAtIntersection(const Object &o, const Vec3Df &intersectionPoint,
+										const Triangle &triangle) const;
+
+	Vec3Df getPhongBRDF(const Scene * scene, const Ray &ray, const Object &o,
+						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
     
 private:
     Vec3Df backgroundColor;
