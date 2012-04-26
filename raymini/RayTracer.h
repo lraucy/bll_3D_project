@@ -47,9 +47,10 @@ protected:
 	Vec3Df getPhongBRDF(const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
 
-	Vec3Df rayTrace(const Vec3Df &camPos, const Vec3Df &dir) const;
-	Vec3Df getColor(const Vec3Df &camPos, const Vec3Df &dir) const;
-	Vec3Df getColorWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColorFromPixel(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColorFromPixelWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColorFromPixelWithAAx3(const Vec3Df &camPos, const Vec3Df &dir) const;
     
 private:
     Vec3Df backgroundColor;

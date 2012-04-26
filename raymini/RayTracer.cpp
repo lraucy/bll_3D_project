@@ -61,7 +61,7 @@ QImage RayTracer::render (const Vec3Df & camPos,
 			Vec3Df dir = direction + step;
 			dir.normalize ();
 
-			Vec3Df c = getColorWithAAx2(camPos, dir);
+			Vec3Df c = getColorFromPixelWithAAx3(camPos, dir);
 
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
@@ -128,7 +128,7 @@ Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &in
 	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
 }
 
-Vec3Df RayTracer::rayTrace(const Vec3Df &camPos, const Vec3Df &dir) const {
+Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const {
 	Vec3Df c (backgroundColor);
 	
 	Triangle intersectionTriangle;
@@ -146,17 +146,30 @@ Vec3Df RayTracer::rayTrace(const Vec3Df &camPos, const Vec3Df &dir) const {
 	return c;
 }
 
-Vec3Df RayTracer::getColor(const Vec3Df &camPos, const Vec3Df &dir) const {
-	return rayTrace(camPos, dir);
+Vec3Df RayTracer::getColorFromPixel(const Vec3Df &camPos, const Vec3Df &dir) const {
+	return getColorFromRay(camPos, dir);
 }
-Vec3Df RayTracer::getColorWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const {
+
+Vec3Df RayTracer::getColorFromPixelWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const {
 	Vec3Df color = Vec3Df(0.0f, 0.0f, 0.0f);
 	for (unsigned int i = 0; i < 2; i++) {
 		for (unsigned int j = 0; j < 2; j++) {
 			Vec3Df aaDir = dir + (0.5 - i)*tanX*rightVector/(2.0*screenWidth)
 				+ (0.5 - j)*tanY*upVector/(2.0*screenHeight);
-			color += rayTrace(camPos, aaDir);
+			color += getColorFromRay(camPos, aaDir);
 		}
 	}
 	return color / 4;
+}
+
+Vec3Df RayTracer::getColorFromPixelWithAAx3(const Vec3Df &camPos, const Vec3Df &dir) const {
+	Vec3Df color = Vec3Df(0.0f, 0.0f, 0.0f);
+	for (int i = -1; i < 2; i++) {
+		for (int j = -1; j < 2; j++) {
+			Vec3Df aaDir = dir + i*tanX*rightVector/(4.0*screenWidth)
+				+ j*tanY*upVector/(4.0*screenHeight);
+			color += getColorFromRay(camPos, aaDir);
+		}
+	}
+	return color / 9;
 }
