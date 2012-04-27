@@ -142,9 +142,10 @@ Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const
 		Ray ray (camPos - objectIntersected->getTrans(), dir);
 		Vec3Df normal = getNormalAtIntersection(*objectIntersected, intersectionPoint,
 				intersectionTriangle);
-		c = getPhongBRDF(ray, *objectIntersected, intersectionPoint, normal);
+		Vec3Df intersectionPointGlobalMark = intersectionPoint + objectIntersected->getTrans();
+		c = getPhongBRDF(ray, *objectIntersected, intersectionPointGlobalMark, normal);
 
-		float coef = shadowRay(intersectionPoint, 10);
+		float coef = shadowRay(intersectionPointGlobalMark, 10);
 		c = c * Vec3Df(coef, coef, coef);
 	}
 	return c;
