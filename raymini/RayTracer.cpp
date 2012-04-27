@@ -198,10 +198,7 @@ Vec3Df RayTracer::getColor(const Vec3Df &camPos, const Vec3Df &dir) const {
 
 float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
   Scene * scene = Scene::getInstance();
-  Triangle intersectionTriangleShadow;
-  Vec3Df intersectionPointShadow;
   float epsilon = 0.1;
-  float smallestIntersectionDistanceShadow = 1000000.f;
   bool hasIntersectionShadow = false;
 
   Vec3Df shadowRayDirection = scene->getLights()[0].getPos() - intersectionPoint;
@@ -210,7 +207,7 @@ float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
   for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
     const Object & o = scene->getObjects()[k];
     Ray ray (intersectionPoint + epsilon * shadowRayDirection - o.getTrans (), shadowRayDirection);
-    if(ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPointShadow, smallestIntersectionDistanceShadow, intersectionTriangleShadow))
+    if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
       hasIntersectionShadow = true;
   }
   return hasIntersectionShadow ? 0.0 : 1.1 ;
@@ -219,13 +216,10 @@ float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
 float RayTracer::softShadowRay(const Vec3Df &intersectionPoint, 
 			       const unsigned int nbSamples) const{
   Scene * scene = Scene::getInstance();
-  Triangle intersectionTriangleShadow;
-  Vec3Df intersectionPointShadow;
   float epsilon = 0.1;
   float counter = 0;
   
   for(unsigned int i = 0; i < nbSamples; i++){
-    float smallestIntersectionDistanceShadow = 1000000.f;
     Vec3Df shadowRayDirection = ((scene->getLights()[0].getPos() + 
 				 Vec3Df((rand()/(double)RAND_MAX) * scene->getLights()[0].getRadius(),
 					(rand()/(double)RAND_MAX) * scene->getLights()[0].getRadius(),
@@ -235,8 +229,8 @@ float RayTracer::softShadowRay(const Vec3Df &intersectionPoint,
     for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
       const Object & o = scene->getObjects()[k];
       Ray ray (intersectionPoint + epsilon * shadowRayDirection - o.getTrans (), shadowRayDirection);
-      if(ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPointShadow, smallestIntersectionDistanceShadow, intersectionTriangleShadow))
-	counter += (1./nbSamples);
+      if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
+		counter += (1./nbSamples);
     }
   }
 

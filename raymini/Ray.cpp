@@ -77,8 +77,7 @@ bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & inte
 		return false;
 
 	float denominator = (Vec3Df::dotProduct(n, this->direction));
-	if (denominator > 0 // check face orientation
-			|| - denominator < SMALL_NUMBER) // check parallelism between ray and triangle
+	if (fabs(denominator) < SMALL_NUMBER) // check parallelism between ray and triangle
 		return false;
 	float r = Vec3Df::dotProduct(n,v0 - this->origin) / denominator;
 	if (r < 0.0)
@@ -130,4 +129,25 @@ bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree, Vec3Df &intersecti
 	}
 
 	return returnValue;
+}
+
+bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree) const {
+	Vec3Df bbIntersection;
+	Vec3Df triangleIntersection;
+	if(this->intersect(*kdTree->boundingBox, bbIntersection)) {
+		for(unsigned int i = 0; i < kdTree->triangles.size(); i++) {
+			if(this->intersect(mesh, kdTree->triangles[i], triangleIntersection))
+				return true;
+		}
+
+		if(kdTree->leftChild != NULL
+				&& this->intersect(mesh, kdTree->leftChild))
+			return true;
+
+		if(kdTree->rightChild != NULL
+				&& this->intersect(mesh, kdTree->rightChild))
+			return true;
+	}
+
+	return false;
 }
