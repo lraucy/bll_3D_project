@@ -16,6 +16,16 @@
 #include "Ray.h"
 #include "Object.h"
 
+#define RAYTRACER_NO_SHADOW 0
+#define RAYTRACER_HARD_SHADOW 1
+#define RAYTRACER_SOFT_SHADOW 2
+
+#define RAYTRACER_NO_AA 0
+#define RAYTRACER_AAx2 1
+#define RAYTRACER_AAx3 2
+
+
+
 class Scene;
 
 class RayTracer {
@@ -26,6 +36,9 @@ public:
     inline const Vec3Df & getBackgroundColor () const { return backgroundColor;}
     inline void setBackgroundColor (const Vec3Df & c) { backgroundColor = c; }
     
+  inline void setShadowOption(const int _shadowOpt) { shadowOpt = _shadowOpt;} 
+  inline void setAaOption(const int _aaOpt) { aaOpt = _aaOpt;} 
+  
     QImage render (const Vec3Df & camPos,
                    const Vec3Df & viewDirection,
                    const Vec3Df & upVector,
@@ -48,14 +61,20 @@ protected:
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
 
 	Vec3Df getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir, Vec3Df &intersectionPoint) const;
+  
+  Vec3Df getColor(const Vec3Df &camPos, const Vec3Df &dir, Vec3Df &intersectionPoint) const;
+
 	Vec3Df getColorFromPixel(const Vec3Df &camPos, const Vec3Df &dir, Vec3Df &intersectionPoint) const;
 	Vec3Df getColorFromPixelWithAAx2(const Vec3Df &camPos, const Vec3Df &dir, Vec3Df &intersectionPoint) const;
-  Vec3Df getColorFromPixelWithAAx3(const Vec3Df &camPos, const Vec3Df &dir, Vec3Df &intersectionPoint) const;
+	Vec3Df getColorFromPixelWithAAx3(const Vec3Df &camPos, const Vec3Df &dir, Vec3Df &intersectionPoint) const;
       
-	bool shadowRay(const Vec3Df &intersectionPoint) const;
+  float shadowRay(const Vec3Df &intersectionPoint, 
+						const unsigned int nbSamples) const;    
+  float hardShadowRay(const Vec3Df &intersectionPoint) const;
   
   float softShadowRay(const Vec3Df &intersectionPoint, 
-						const unsigned int nbSamples) const;    
+						const unsigned int nbSamples) const;
+      
 private:
     Vec3Df backgroundColor;
 	unsigned int screenWidth;
@@ -64,6 +83,8 @@ private:
 	Vec3Df rightVector;
 	float tanX;
 	float tanY;
+  int shadowOpt;
+  int aaOpt;
 };
 
 

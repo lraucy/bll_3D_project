@@ -122,6 +122,36 @@ void Window::about () {
                         "<b>RayMini</b> <br> by <i>Tamy Boubekeur</i>.");
 }
 
+void Window::setShadowOption(int option) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  switch(option) {
+  case 0:
+    rayTracerInstance->setShadowOption(RAYTRACER_NO_SHADOW);
+    break;
+  case 1:
+    rayTracerInstance->setShadowOption(RAYTRACER_HARD_SHADOW);
+    break;
+  case 2:
+    rayTracerInstance->setShadowOption(RAYTRACER_SOFT_SHADOW);
+    break;
+  }
+}
+
+void Window::setAaOption(int option) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  switch(option) {
+  case 0:
+    rayTracerInstance->setAaOption(RAYTRACER_NO_AA);
+    break;
+  case 1:
+    rayTracerInstance->setAaOption(RAYTRACER_AAx2);
+    break;
+  case 2:
+    rayTracerInstance->setAaOption(RAYTRACER_AAx3);
+    break;
+  }
+}
+
 void Window::initControlWidget () {
     controlWidget = new QGroupBox ();
     QVBoxLayout * layout = new QVBoxLayout (controlWidget);
@@ -151,19 +181,33 @@ void Window::initControlWidget () {
     
     QGroupBox * rayGroupBox = new QGroupBox ("Ray Tracing", controlWidget);
     QVBoxLayout * rayLayout = new QVBoxLayout (rayGroupBox);
-
     QPushButton * rayButton = new QPushButton ("Render", rayGroupBox);
     rayLayout->addWidget (rayButton);
     connect (rayButton, SIGNAL (clicked ()), this, SLOT (renderRayImage ()));
-
     QPushButton * showButton = new QPushButton ("Show", rayGroupBox);
     rayLayout->addWidget (showButton);
     connect (showButton, SIGNAL (clicked ()), this, SLOT (showRayImage ()));
-
     QPushButton * saveButton  = new QPushButton ("Save", rayGroupBox);
     connect (saveButton, SIGNAL (clicked ()) , this, SLOT (exportRayImage ()));
     rayLayout->addWidget (saveButton);
 
+    // Anti aliasing options
+    QComboBox *aaTypeList = new QComboBox(rayGroupBox);
+    aaTypeList->addItem("No AA");
+    aaTypeList->addItem("AA x 2");
+    aaTypeList->addItem("AA x 3");
+    connect (aaTypeList, SIGNAL (activated (int)), this, SLOT (setAaOption (int)));
+    rayLayout->addWidget (aaTypeList);
+    
+
+    // Shadows options
+    QComboBox *shadowTypeList = new QComboBox(rayGroupBox);
+    shadowTypeList->addItem("No shadow");
+    shadowTypeList->addItem("Hard shadow");
+    shadowTypeList->addItem("Soft shadow");
+    connect (shadowTypeList, SIGNAL (activated (int)), this, SLOT (setShadowOption (int)));
+    rayLayout->addWidget (shadowTypeList);
+    
     layout->addWidget (rayGroupBox);
     
     QGroupBox * globalGroupBox = new QGroupBox ("Global Settings", controlWidget);

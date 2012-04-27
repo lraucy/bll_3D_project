@@ -62,8 +62,10 @@ QImage RayTracer::render (const Vec3Df & camPos,
 			Vec3Df intersectionPoint;
 			dir.normalize ();
 
-			Vec3Df c = getColorFromPixelWithAAx3(camPos, dir, intersectionPoint);
-			float coef = softShadowRay(intersectionPoint, 10);
+			Vec3Df c = getColor(camPos, dir, intersectionPoint);
+			
+
+			float coef = shadowRay(intersectionPoint, 10);
 			c = c * Vec3Df(coef, coef, coef);
 			
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
@@ -185,7 +187,22 @@ Vec3Df RayTracer::getColorFromPixelWithAAx3(const Vec3Df &camPos, const Vec3Df &
 	return color / 9;
 }
 
-bool RayTracer::shadowRay(const Vec3Df &intersectionPoint) const{
+Vec3Df RayTracer::getColor(const Vec3Df &camPos, const Vec3Df &dir, Vec3Df &intersectionPoint) const {
+  switch(aaOpt){
+  case RAYTRACER_NO_AA: 
+    return getColorFromPixel(camPos, dir, intersectionPoint);
+    break;
+  case RAYTRACER_AAx2:
+    return getColorFromPixelWithAAx2(camPos, dir, intersectionPoint);
+    break;
+  case RAYTRACER_AAx3:
+    return getColorFromPixelWithAAx3(camPos, dir, intersectionPoint);
+    break;
+  }
+  return getColorFromPixel(camPos, dir, intersectionPoint); 
+}
+
+float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
   Scene * scene = Scene::getInstance();
   Triangle intersectionTriangleShadow;
   Vec3Df intersectionPointShadow;
@@ -202,7 +219,7 @@ bool RayTracer::shadowRay(const Vec3Df &intersectionPoint) const{
     if(ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPointShadow, smallestIntersectionDistanceShadow, intersectionTriangleShadow))
       hasIntersectionShadow = true;
   }
-  return hasIntersectionShadow;
+  return hasIntersectionShadow ? 0.0 : 1.1 ;
 }
 
 float RayTracer::softShadowRay(const Vec3Df &intersectionPoint, 
@@ -230,5 +247,21 @@ float RayTracer::softShadowRay(const Vec3Df &intersectionPoint,
   }
 
   return 1. - counter;
+}
+
+float RayTracer::shadowRay(const Vec3Df &intersectionPoint, 
+			       const unsigned int nbSamples) const{
+  switch(shadowOpt){
+  case RAYTRACER_NO_SHADOW: 
+    return 1.0;
+    break;
+  case RAYTRACER_HARD_SHADOW:
+    return hardShadowRay(intersectionPoint);
+    break;
+  case RAYTRACER_SOFT_SHADOW:
+    return softShadowRay(intersectionPoint, nbSamples);
+    break;
+  }
+  return 1.0;
 }
 

@@ -35,6 +35,8 @@ public slots :
     void exportGLImage ();
     void exportRayImage ();
     void about ();
+  void setShadowOption(int option);
+  void setAaOption(int option);
     
 private :
     void initControlWidget ();
