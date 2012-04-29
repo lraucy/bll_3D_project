@@ -129,6 +129,23 @@ Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &in
 	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
 }
 
+
+Vec3Df RayTracer::getPhongBRDFReflectance(const Ray &ray, const Object &o, const Vec3Df &intersectionPoint,
+					  const Vec3Df &normal) const{
+
+    float reflectance = o.getMaterial().getReflectance();
+    float epsilon = 0.001f;
+    if(reflectance > 0.0f) {
+	Vec3Df reflectedRay = 2 * normal * (Vec3Df::dotProduct(-ray.getDirection(), normal)) + ray.getDirection();//  tmp * dir;
+    	reflectedRay.normalize();
+	Vec3Df point = intersectionPoint + epsilon * reflectedRay;
+	return reflectance * getColorFromRay(point, reflectedRay);
+    }
+    return Vec3Df(0.0f, 0.0f, 0.0f);
+}
+
+
+
 Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const {
 	Vec3Df c (backgroundColor);
 	
@@ -145,6 +162,8 @@ Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const
 		Vec3Df intersectionPointGlobalMark = intersectionPoint + objectIntersected->getTrans();
 		c = getPhongBRDF(ray, *objectIntersected, intersectionPointGlobalMark, normal);
 
+		normal.normalize();
+		c += getPhongBRDFReflectance(ray, *objectIntersected, intersectionPointGlobalMark, normal);
 		float coef = shadowRay(intersectionPointGlobalMark, 10);
 		c = c * Vec3Df(coef, coef, coef);
 	}
@@ -199,7 +218,7 @@ Vec3Df RayTracer::getColor(const Vec3Df &camPos, const Vec3Df &dir) const {
 
 float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
   Scene * scene = Scene::getInstance();
-  float epsilon = 0.1;
+  float epsilon = 0.001;
   bool hasIntersectionShadow = false;
 
   Vec3Df shadowRayDirection = scene->getLights()[0].getPos() - intersectionPoint;
@@ -211,13 +230,13 @@ float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
     if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
       hasIntersectionShadow = true;
   }
-  return hasIntersectionShadow ? 0.0 : 1.1 ;
+  return hasIntersectionShadow ? 0.0 : 1.0 ;
 }
 
 float RayTracer::softShadowRay(const Vec3Df &intersectionPoint, 
 			       const unsigned int nbSamples) const{
   Scene * scene = Scene::getInstance();
-  float epsilon = 0.1;
+  float epsilon = 0.001;
   float counter = 0;
   
   for(unsigned int i = 0; i < nbSamples; i++){

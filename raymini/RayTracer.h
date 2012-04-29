@@ -60,6 +60,9 @@ protected:
 	Vec3Df getPhongBRDF(const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
 
+	Vec3Df getPhongBRDFReflectance(const Ray &ray, const Object &o,
+						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
+
 	Vec3Df getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const;
   
 	Vec3Df getColor(const Vec3Df &camPos, const Vec3Df &dir) const;
