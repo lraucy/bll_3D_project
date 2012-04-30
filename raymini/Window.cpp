@@ -152,6 +152,11 @@ void Window::setAaOption(int option) {
   }
 }
 
+void Window::setAOOption(bool option) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setAOOption(option);
+}
+
 void Window::initControlWidget () {
     controlWidget = new QGroupBox ();
     QVBoxLayout * layout = new QVBoxLayout (controlWidget);
@@ -190,6 +195,11 @@ void Window::initControlWidget () {
     QPushButton * saveButton  = new QPushButton ("Save", rayGroupBox);
     connect (saveButton, SIGNAL (clicked ()) , this, SLOT (exportRayImage ()));
     rayLayout->addWidget (saveButton);
+
+    // Ambient Occlusion Options
+    QCheckBox *AOCheckBox = new QCheckBox("Ambient Occlusion", rayGroupBox);
+	connect (AOCheckBox, SIGNAL(toggled (bool)), this, SLOT(setAOOption(bool)));
+	rayLayout->addWidget(AOCheckBox);
 
     // Anti aliasing options
     QComboBox *aaTypeList = new QComboBox(rayGroupBox);

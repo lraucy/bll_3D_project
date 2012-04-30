@@ -36,6 +36,7 @@ public:
     inline const Vec3Df & getBackgroundColor () const { return backgroundColor;}
     inline void setBackgroundColor (const Vec3Df & c) { backgroundColor = c; }
     
+  inline void setAOOption(const bool _aoOpt) { aoOpt = _aoOpt;}
   inline void setShadowOption(const int _shadowOpt) { shadowOpt = _shadowOpt;} 
   inline void setAaOption(const int _aaOpt) { aaOpt = _aaOpt;} 
   
@@ -74,6 +75,9 @@ protected:
   
   float softShadowRay(const Vec3Df &intersectionPoint, 
 						const unsigned int nbSamples) const;
+	float ambientOcclusion(const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
+	float computeAmbientOcclusion(const Vec3Df &intersectionPoint,
+		const Vec3Df &normal, unsigned int nbRay, float R, float coneAngle) const;
       
 private:
     Vec3Df backgroundColor;
@@ -85,6 +89,7 @@ private:
 	float tanY;
   int shadowOpt;
   int aaOpt;
+  bool aoOpt;
 };
 
 

@@ -28,10 +28,17 @@ public:
     inline const Vec3Df & getDirection () const { return direction; }
     inline Vec3Df & getDirection () { return direction; }
 
+	inline void translate(const Vec3Df &trans) { origin += trans; }
+
+	static Ray * getRandomRay(const Vec3Df &origin, const Vec3Df &normal,
+			const Vec3Df &secondVec, const Vec3Df &thirdVec, float coneAngle);
+
     bool intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
     bool intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & intersectionPoint) const;
 	bool intersect (const Mesh & mesh, KdTreeElement *kdTree, Vec3Df & intersectionPoint, float &intersectionDistance, Triangle &triangle) const;
 	bool intersect (const Mesh & mesh, KdTreeElement *kdTree) const;
+	bool intersectInSphere (const Mesh &mesh, KdTreeElement *kdTree,
+		const Vec3Df &originSphere, float R) const;
     
 private:
     Vec3Df origin;

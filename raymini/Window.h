@@ -37,6 +37,7 @@ public slots :
     void about ();
   void setShadowOption(int option);
   void setAaOption(int option);
+  void setAOOption(bool option);
     
 private :
     void initControlWidget ();

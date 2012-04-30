@@ -144,6 +144,7 @@ Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const
 				intersectionTriangle);
 		Vec3Df intersectionPointGlobalMark = intersectionPoint + objectIntersected->getTrans();
 		c = getPhongBRDF(ray, *objectIntersected, intersectionPointGlobalMark, normal);
+		c += ambientOcclusion(intersectionPointGlobalMark, normal) * objectIntersected->getMaterial().getColor();
 
 		float coef = shadowRay(intersectionPointGlobalMark, 10);
 		c = c * Vec3Df(coef, coef, coef);
@@ -252,5 +253,54 @@ float RayTracer::shadowRay(const Vec3Df &intersectionPoint,
     break;
   }
   return 1.0;
+}
+
+#define AMBIENT_OCCLUSION_NUMBER_RAY 10
+#define AMBIENT_OCCLUSION_SPHERE_RADIUS 5
+#define AMBIENT_OCCLUSION_CONE_ANGLE 1.00
+
+
+
+float RayTracer::ambientOcclusion(const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
+	if(aoOpt)
+		return 0.2 * 255 * computeAmbientOcclusion(intersectionPoint, normal, AMBIENT_OCCLUSION_NUMBER_RAY,
+					AMBIENT_OCCLUSION_SPHERE_RADIUS, AMBIENT_OCCLUSION_CONE_ANGLE);
+	else
+		return 0.0;
+}
+
+float RayTracer::computeAmbientOcclusion(const Vec3Df &intersectionPoint,
+		const Vec3Df &normal, unsigned int nbRay, float R, float coneAngle) const {
+	Scene *scene = Scene::getInstance();
+
+	R = scene->getBoundingBox().getSize() * R / 100;
+	Vec3Df secondVec(-normal[1],normal[0],0.0); // compute second perpendicular vector
+	Vec3Df thirdVec = Vec3Df::crossProduct(normal, secondVec);
+	secondVec.normalize();
+	thirdVec.normalize();
+
+	Vec3Df intersectionOtherObject;
+	float occlusionValue = 0;
+
+	for (unsigned int i = 0; i < nbRay; i++) {
+		bool intersect = false;
+		Ray *ray = Ray::getRandomRay(intersectionPoint, normal, secondVec, thirdVec, coneAngle);
+
+		for (unsigned int j = 0; j < scene->getObjects().size(); j++) {
+			const Object &o = scene->getObjects()[j];
+			ray->translate(-o.getTrans());
+			if(ray->intersectInSphere(o.getMesh(), o.getMesh().kdTree,
+						intersectionPoint - o.getTrans(), R)) {
+				intersect = true;
+			}
+			ray->translate(-o.getTrans());
+			if (intersect)
+				break;
+		}
+		if(!intersect)
+			occlusionValue += Vec3Df::dotProduct(ray->getDirection(), normal);
+		delete ray;
+	}
+	return occlusionValue / nbRay;
 }
 

@@ -104,6 +104,30 @@ bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & inte
 		return true;
 }
 
+bool Ray::intersectInSphere (const Mesh &mesh, KdTreeElement *kdTree,
+		const Vec3Df &originSphere, float R) const{
+
+	Vec3Df bbIntersection;
+	Vec3Df intersectionPoint;
+	if(this->intersect(*kdTree->boundingBox, bbIntersection)) {
+		if((bbIntersection - originSphere).getSquaredLength() > R*R)
+			return false;
+
+		for(unsigned int i = 0; i < kdTree->triangles.size(); i++) {
+			if(this->intersect(mesh, kdTree->triangles[i], intersectionPoint))
+				if((intersectionPoint - originSphere).getSquaredLength() <= R*R)
+					return true;
+		}
+		if(kdTree->leftChild != NULL)
+			if(this->intersectInSphere(mesh, kdTree->leftChild, originSphere, R))
+				return true;
+		if(kdTree->rightChild != NULL)
+			if(this->intersectInSphere(mesh, kdTree->rightChild, originSphere, R))
+				return true;
+	}
+	return false;
+}
+
 bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree, Vec3Df &intersectionPoint, float &intersectionDistance, Triangle &triangle) const {
 	bool returnValue = false;
 
@@ -150,4 +174,18 @@ bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree) const {
 	}
 
 	return false;
+}
+
+#define EPSILON_RAY 0.00001
+Ray * Ray::getRandomRay(const Vec3Df &origin, const Vec3Df &normal,
+			const Vec3Df &secondVec, const Vec3Df &thirdVec, float coneAngle) {
+
+	float angle1 = (float) rand()/(float)RAND_MAX * coneAngle;
+	float angle2 = (float) rand()/(float)RAND_MAX * 2 * M_PI;
+	Vec3Df dir = cosf(angle2) * secondVec + sinf(angle2) * thirdVec;
+	dir += ((float)1.0/tanf(angle1)) * normal;
+	dir.normalize();
+	Ray *ray = new Ray(origin + EPSILON_RAY * dir, dir);
+	return ray;
+
 }
