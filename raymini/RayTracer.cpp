@@ -292,7 +292,7 @@ float RayTracer::computeAmbientOcclusion(const Vec3Df &intersectionPoint,
 						intersectionPoint - o.getTrans(), R)) {
 				intersect = true;
 			}
-			ray->translate(-o.getTrans());
+			ray->translate(o.getTrans());
 			if (intersect)
 				break;
 		}
