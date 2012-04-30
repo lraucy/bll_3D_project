@@ -10,9 +10,13 @@
 #include "Scene.h"
 #include <QProgressDialog>
 #include "KdTreeElement.h"
-
+#include <cstdlib>
+#include <cmath>
+#include <vector>
+using namespace std;
 static RayTracer * instance = NULL;
 
+#define NB_DIR 10
 RayTracer * RayTracer::getInstance () {
 	if (instance == NULL)
 		instance = new RayTracer ();
@@ -62,15 +66,16 @@ QImage RayTracer::render (const Vec3Df & camPos,
 			Vec3Df intersectionPoint;
 			const Object * objectIntersected = NULL;
 
-			objectIntersected = getObjectIntersected(scene, camPos, dir, intersectionPoint,
-					intersectionTriangle);
+			objectIntersected = getObjectIntersected(scene, camPos, dir, intersectionPoint, intersectionTriangle);
 
 			if(objectIntersected != NULL){
-				Ray ray (camPos-objectIntersected->getTrans (), dir);
-				Vec3Df normal = getNormalAtIntersection(*objectIntersected,
-													intersectionPoint, intersectionTriangle);
-
-				c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
+			Ray ray (camPos-objectIntersected->getTrans (), dir);
+			Vec3Df normal = getNormalAtIntersection(*objectIntersected, intersectionPoint, intersectionTriangle);
+	 
+			Vertex  intP(intersectionPoint, normal);
+				c = ambientOcclusion(scene, ray, *objectIntersected,intP);
+			//c = pathTracer(scene, ray, *objectIntersected,intP, 0);
+			//	c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
 			}
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
@@ -78,6 +83,7 @@ QImage RayTracer::render (const Vec3Df & camPos,
 	progressDialog.setValue (100);
 	return image;
 }
+
 
 const Object * RayTracer::getObjectIntersected(const Scene * scene, const Vec3Df &camPos,
 									const Vec3Df &dir, Vec3Df &intersectionPoint,
@@ -96,14 +102,12 @@ const Object * RayTracer::getObjectIntersected(const Scene * scene, const Vec3Df
 	return objectIntersected;
 }
 
-Vec3Df RayTracer::getNormalAtIntersection(const Object &o, const Vec3Df &intersectionPoint,
-												const Triangle &triangle) const{
+Vec3Df RayTracer::getNormalAtIntersection(const Object &o, const Vec3Df &intersectionPoint, const Triangle &triangle) const{
 	const Vertex & v0 = o.getMesh().getVertices()[triangle.getVertex(0)];
 	const Vertex & v1 = o.getMesh().getVertices()[triangle.getVertex(1)];
 	const Vertex & v2 = o.getMesh().getVertices()[triangle.getVertex(2)];
 	Vec3Df triangleCoo[3] = {v0.getPos(), v1.getPos(), v2.getPos()};
-	Vec3Df barycentricCooIntersection = Triangle::getBarycentricCoo(triangleCoo,
-														intersectionPoint);
+	Vec3Df barycentricCooIntersection = Triangle::getBarycentricCoo(triangleCoo,intersectionPoint);
 
 	Vec3Df normal = barycentricCooIntersection[0]*v0.getNormal() +
 					barycentricCooIntersection[1]*v1.getNormal() +
@@ -112,21 +116,185 @@ Vec3Df RayTracer::getNormalAtIntersection(const Object &o, const Vec3Df &interse
 	return normal;
 }
 
-Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object &o,
-		const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
-	Vec3Df lightVector = intersectionPoint - scene->getLights()[0].getPos();
-	lightVector.normalize();
-	float w_i = std::max(Vec3Df::dotProduct(normal, lightVector), (float) 0);
+Vec3Df RayTracer::getPhongBRDF(const Scene * scene, const Ray &ray, const Object &o, const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
+  
+  std::vector<Light> lights = scene->getLights();
+  Vec3Df colorVect = o.getMaterial().getColor();
+  float color;
+
+   for(unsigned i=0; i<lights.size(); i++){
+
+
+        Vec3Df toLight = lights[i].getPos(); - intersectionPoint;
+	toLight.normalize();
+	Vec3Df r = (ray.getOrigin() -intersectionPoint);
+	r.normalize();
+	Vec3Df ref = 2*Vec3Df::dotProduct(normal, toLight)*normal - toLight;
+	ref.normalize();
 
 	float diffuseRef = o.getMaterial().getDiffuse();
 	float specRef = o.getMaterial().getSpecular();
 	float shininess = 16.0f;
 
-	Vec3Df colorVect = o.getMaterial().getColor();
-
-	float color = diffuseRef*w_i + specRef*pow(std::max(Vec3Df::dotProduct(Vec3Df::crossProduct(normal, lightVector), ray.getDirection()), (float)0.0), shininess);
-
-	color = 255-color*255;
+	color += specRef * pow(std::max(Vec3Df::dotProduct(ref, r), 0.0f), shininess) + diffuseRef*std::max(Vec3Df::dotProduct(toLight, normal), 0.0f);
+     }
+        color = color*255;
 	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
 }
 
+
+Vec3Df RayTracer::getPhongBRDFwithLights(const Scene * scene, std::vector<Light> lights, const Ray &ray, const Object &o, const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
+  Vec3Df colorVect = o.getMaterial().getColor();
+  float color;
+
+  for(unsigned i=0; i<lights.size(); i++){
+
+
+        Vec3Df toLight = lights[i].getPos(); - intersectionPoint;
+	toLight.normalize();
+	Vec3Df r = (ray.getOrigin() -intersectionPoint);
+	r.normalize();
+	Vec3Df ref = 2*Vec3Df::dotProduct(normal, toLight)*normal - toLight;
+	ref.normalize();
+
+	float diffuseRef = o.getMaterial().getDiffuse();
+	float specRef = o.getMaterial().getSpecular();
+	float shininess = 16.0f;
+
+	color += specRef * pow(std::max(Vec3Df::dotProduct(ref, r), 0.0f), shininess) + diffuseRef*std::max(Vec3Df::dotProduct(toLight, normal), 0.0f);
+     }
+   // color /=lights.size();
+        color = color*255;
+	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
+
+}
+
+
+
+
+
+#define MAX_DEPTH 2
+
+Vec3Df RayTracer::pathTracer(const Scene * scene, const Ray & ray, const Object & intersectedObject, Vertex & intP, unsigned int depth) const{
+
+  Vec3Df color(0.0,0.0,0.0);
+  std::vector<Light> pathTracingLights;
+  const Material &mat = intersectedObject.getMaterial();
+
+  if(depth == MAX_DEPTH){
+    color =  getPhongBRDF(scene, ray, intersectedObject, intP.getPos(), intP.getNormal());
+    return color/(pow(2,depth));
+}
+
+  vector<Vec3Df> direction = getPathTracingDirection(intP);
+  Vec3Df pos = intP.getPos() + intersectedObject.getTrans();
+
+  for(int i = 0; i<direction.size(); i++){
+   const Object * intObject = NULL;
+        Vec3Df intersectionPoint;
+        Vec3Df lightColor(backgroundColor);
+        Vec3Df intPos (pos + 10*direction[i]);
+	Triangle intersectionTriangle;
+        float d = 1.0;
+        float coeff = 0.0;
+	Ray newRay;
+	intObject = getObjectIntersected(scene,pos,direction[i],intersectionPoint,intersectionTriangle);
+	float a = 1.0;
+	float b=0.0;
+	float c=0.5;
+	float intensity = 1/(a+b*d+c*pow(d,2));
+	if(intensity < 1.0)intensity = 1.0;
+	if(intObject != NULL){
+	  Ray newRay(pos, direction[i]);
+	  Vec3Df normal = getNormalAtIntersection(*intObject,intersectionPoint,intersectionTriangle);
+	  Vertex newIntVertex(intersectionPoint, normal);
+	  lightColor = this->pathTracer(scene, newRay, *intObject, newIntVertex, depth+1);
+	  intPos = newIntVertex.getPos() + intObject->getTrans();
+	  // d = sqrt((intPos[0]-pos[0])*(intPos[0]-pos[0]) +(intPos[1]-pos[1])*(intPos[1]-pos[1])+(intPos[2]-pos[2])*(intPos[2]-pos[2]));
+	  coeff = d/(scene->getBoundingBox().getRadius()*10.0);
+	  intensity = 1/(a+b*d+c*pow(d,2));
+	  if(intensity < 1.0)intensity = 1.0;	
+	  //pathTracingLights.push_back(Light(intPos, lightColor, 12.0));
+        }
+	//pathTracingLights.push_back(Light(intPos, lightColor, 0.05*pow(1-coeff, 3)/(depth+1)));
+	pathTracingLights.push_back(Light(intPos, lightColor, 12.0));
+  }
+         color =  getPhongBRDF(scene, ray, intersectedObject, intP.getPos(), intP.getNormal()) / (scene->getLights().size());
+	 //  color += getPhongBRDFwithLights(scene, pathTracingLights, ray, intersectedObject, intP.getPos(), intP.getNormal())/pathTracingLights.size();
+         color /= 2.0*(float)(depth+1);
+
+return color;
+}
+
+std::vector<Vec3Df> RayTracer::getPathTracingDirection( Vertex & v) const{
+
+  std::vector<Vec3Df> directions;
+
+    Vec3Df normal = v.getNormal();
+
+    // Vec3Df p1(1.0,0.0,0.0);
+    //Vec3Df p2(1.0,0.0,0.0);
+    //p1.normalize();
+    //p2.normalize();
+    // std::cout << "produit scalaire entre "<< p1 << " et " << p2 << " " << Vec3Df::dotProduct(p1, p2)<<"\n";
+
+    for (unsigned int i=0; i<NB_DIR; i++) {
+
+        Vec3Df randomDirection;
+        for (int j=0; j<3; j++) {
+
+	  randomDirection[j] += (float)(rand()) / (float)(RAND_MAX) - 0.5; // in [-0.5,0.5]
+
+        }
+        randomDirection.normalize();
+
+	randomDirection *= 0.4;
+        randomDirection += normal;
+	//std::cout << "ray " << v.getNormal() << "\n";
+	//std::cout << "random direction " << randomDirection << "\n";
+	//std::cout << "dot product " << Vec3Df::dotProduct(normal, randomDirection) << "\n";
+     	//if(Vec3Df::dotProduct(normal, randomDirection)>1.0)std::cout << " dotproduct superieur à un \n";
+	randomDirection.normalize();
+	//std::cout << "ray " << v.getNormal() << "\n";
+	//std::cout << "random direction " << randomDirection << "\n";
+	//std::cout << "dot product " << Vec3Df::dotProduct(normal, randomDirection) << "\n";
+	directions.push_back(randomDirection);
+    }
+
+    return directions;
+}
+
+Vec3Df RayTracer::ambientOcclusion(Scene * scene, const Ray & ray, const Object & intersectedObject, Vertex & intP)const{
+
+
+  vector<Vec3Df> direction = getPathTracingDirection(intP);
+  Vec3Df pos = intP.getPos() + intersectedObject.getTrans();
+  Vec3Df color(0.0,0.0,0.0);
+  Vec3Df white(255.0,255.0,255.0);
+	float a = 1.0;
+	float b=0.0;
+	float c=0.5;
+for(int i = 0; i<direction.size(); i++){
+   const Object * intObject = NULL;
+        Vec3Df intPos;
+	Triangle intersectionTriangle;
+  
+	intObject = getObjectIntersected(scene,pos,direction[i],intPos,intersectionTriangle);
+
+	if(intObject == NULL){
+	  float d =  sqrt((intPos[0]-pos[0])*(intPos[0]-pos[0]) +(intPos[1]-pos[1])*(intPos[1]-pos[1])+(intPos[2]-pos[2])*(intPos[2]-pos[2]));
+	  //  d/= (scene->getBoundingBox().getRadius()*10.0);
+	  std::cout<<"d " << d << "\n";
+	  float intensity = 1/(a+b*d+c*pow(d,2));
+	  color+=(white*Vec3Df::dotProduct(intP.getNormal(),direction[i]))*intensity;
+        }
+  }
+ color/=direction.size();
+
+ //color[0] = int(color[0]/8.0)*8.0;
+ //color[1] = int(color[1]/8.0)*8.0;
+ //color[2] = int(color[2]/8.0)*8.0;
+
+ std::cout << "color occlusion" << color << "\n";
+ return color;
+}

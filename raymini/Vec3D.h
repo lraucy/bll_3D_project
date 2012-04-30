@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmath>
 #include <iostream>
+#include <vector>
+#include <cstdlib>
 
 
 template<typename T> class Vec3D;
@@ -103,6 +105,7 @@ public:
         p[1] = p1;
         p[2] = p2;
     };
+
     inline Vec3D (const Vec3D & v) {
         init (v[0], v[1], v[2]);
     }
@@ -205,8 +208,7 @@ public:
         } else {
             if (fabs(p[1]) < fabs(p[2]))
                 u = Vec3D (p[2], 0, -p[0]);
-            else
-                u = Vec3D(-p[1], p[0], 0);
+            else u = Vec3D(-p[1], p[0], 0);
         }
         v = crossProduct (*this, u);
     }
@@ -214,6 +216,13 @@ public:
         T w = dotProduct (((*this) - P), N);
         return (*this) - (N * w);
     }
+
+   inline Vec3D projectOn (const Vec3D & N) const {
+	    T w = dotProduct (*this, N);
+        return (*this) - (N * w);
+    }
+
+
     static inline Vec3D segment (const Vec3D & a, const Vec3D & b) {
         Vec3D r;
         r[0] = b[0] - a[0];
@@ -293,6 +302,7 @@ public:
 protected:
     T p[3];
 };
+
 
 template <class T> inline Vec3D<T> swap (Vec3D<T> & P, Vec3D<T> & Q) {
     Vec3D<T> tmp = P;

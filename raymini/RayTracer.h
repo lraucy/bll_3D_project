@@ -15,6 +15,7 @@
 #include "Vec3D.h"
 #include "Ray.h"
 #include "Object.h"
+#include "Light.h"
 
 class Scene;
 
@@ -47,7 +48,14 @@ protected:
 
 	Vec3Df getPhongBRDF(const Scene * scene, const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
-    
+
+  Vec3Df getPhongBRDFwithLights(const Scene * scene,const std::vector<Light>lights, const Ray &ray, const Object &o,
+						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
+
+  Vec3Df pathTracer(const Scene * scene, const Ray & ray, const Object & intersectedObject, Vertex & intP, unsigned int depth) const;
+  Vec3Df directionFromHemisphere(const Vec3Df &intersectionPoint, const Vec3Df &normal)const;
+  std::vector<Vec3Df> getPathTracingDirection(Vertex & v)const;
+  Vec3Df ambientOcclusion(Scene * scene, const Ray & ray, const Object & intersectedObject, Vertex & intP)const;
 private:
     Vec3Df backgroundColor;
 };

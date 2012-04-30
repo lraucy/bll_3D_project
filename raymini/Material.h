@@ -17,9 +17,9 @@
 
 class Material {
 public:
-    inline Material () : diffuse (0.8f), specular (0.2f), color (0.5f, 0.5f, 0.5f)  {}
-    inline Material (float diffuse, float specular, const Vec3Df & color)
-        : diffuse (diffuse), specular (specular), color (color) {}
+  inline Material () : diffuse (0.8f), specular (0.2f), color (0.5f, 0.5f, 0.5f)  {}
+  inline Material (float diffuse, float specular, const Vec3Df & color)
+	: diffuse (diffuse), specular (specular), color (color) {}
     virtual ~Material () {}
 
     inline float getDiffuse () const { return diffuse; }
