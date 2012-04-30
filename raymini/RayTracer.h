@@ -41,6 +41,12 @@ public:
   inline void setAaOption(const int _aaOpt) { aaOpt = _aaOpt;} 
   inline void setAONbRay(unsigned int _aoNbRay) { aoNbRay = _aoNbRay;}
   inline unsigned int getAONbRay() { return aoNbRay; }
+  inline void setAOSphereRadius(unsigned int _aoSphereRadius) { aoSphereRadius = _aoSphereRadius;}
+  inline unsigned int getAOSphereRadius() { return aoSphereRadius; }
+  inline void setAOConeAngle(unsigned int _aoConeAngle) { aoConeAngle = _aoConeAngle;}
+  inline unsigned int getAOConeAngle() { return aoConeAngle; }
+  inline void setAOCoeff(float _aoCoeff) { aoCoeff = _aoCoeff;}
+  inline float getAOCoeff() { return aoCoeff; }
   
     QImage render (const Vec3Df & camPos,
                    const Vec3Df & viewDirection,
@@ -52,7 +58,7 @@ public:
                    unsigned int screenHeight);
     
 protected:
-    inline RayTracer () { aoNbRay = 10; }
+    inline RayTracer () { aoNbRay = 10; aoSphereRadius = 5; aoConeAngle = 70; aoCoeff = 0.2;}
     inline virtual ~RayTracer () {}
 	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
@@ -92,7 +98,10 @@ private:
   int shadowOpt;
   int aaOpt;
   bool aoOpt;
-  int aoNbRay;
+  unsigned int aoNbRay;
+  unsigned int aoSphereRadius;
+  unsigned int aoConeAngle;
+  float aoCoeff;
 };
 
 

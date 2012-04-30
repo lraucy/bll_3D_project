@@ -51,7 +51,7 @@ Window::Window () : QMainWindow (NULL) {
     QDockWidget * controlDockWidget = new QDockWidget (this);
     initControlWidget ();
     
-    controlDockWidget->setWidget (controlWidget);
+    controlDockWidget->setWidget (scrollArea);
     controlDockWidget->adjustSize ();
     addDockWidget (Qt::RightDockWidgetArea, controlDockWidget);
     controlDockWidget->setFeatures (QDockWidget::AllDockWidgetFeatures);
@@ -166,7 +166,35 @@ void Window::setAONumberRay(int NbRay) {
     rayTracerInstance->setAONbRay(NbRay);
 }
 
+int Window::getAOSphereRadius() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    return rayTracerInstance->getAOSphereRadius();
+}
+void Window::setAOSphereRadius(int sphereRadius) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setAOSphereRadius(sphereRadius);
+}
+
+int Window::getAOConeAngle() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    return rayTracerInstance->getAOConeAngle();
+}
+void Window::setAOConeAngle(int coneAngle) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setAOConeAngle(coneAngle);
+}
+
+double Window::getAOCoeff() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    return rayTracerInstance->getAOCoeff();
+}
+void Window::setAOCoeff(double coeff) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setAOCoeff(coeff);
+}
+
 void Window::initControlWidget () {
+	scrollArea = new QScrollArea();
     controlWidget = new QGroupBox ();
     QVBoxLayout * layout = new QVBoxLayout (controlWidget);
     
@@ -205,16 +233,6 @@ void Window::initControlWidget () {
     connect (saveButton, SIGNAL (clicked ()) , this, SLOT (exportRayImage ()));
     rayLayout->addWidget (saveButton);
 
-    // Ambient Occlusion Options
-    QCheckBox *AOCheckBox = new QCheckBox("Ambient Occlusion", rayGroupBox);
-	connect (AOCheckBox, SIGNAL(toggled (bool)), this, SLOT(setAOOption(bool)));
-	rayLayout->addWidget(AOCheckBox);
-	QSpinBox *AONumberIteration = new QSpinBox();
-	AONumberIteration->setValue(getAONumberRay());
-	AONumberIteration->setRange(0, 100000);
-	connect(AONumberIteration, SIGNAL(valueChanged(int)), this, SLOT (setAONumberRay(int)));
-	rayLayout->addWidget(AONumberIteration);
-
     // Anti aliasing options
     QComboBox *aaTypeList = new QComboBox(rayGroupBox);
     aaTypeList->addItem("No AA");
@@ -233,6 +251,45 @@ void Window::initControlWidget () {
     rayLayout->addWidget (shadowTypeList);
     
     layout->addWidget (rayGroupBox);
+
+    // Ambient Occlusion Options
+    QGroupBox * aoGroupBox = new QGroupBox ("Ambient Occlusion", controlWidget);
+    QVBoxLayout * aoLayout = new QVBoxLayout (aoGroupBox);
+    QCheckBox *AOCheckBox = new QCheckBox("Enable AO", aoGroupBox);
+	connect (AOCheckBox, SIGNAL(toggled (bool)), this, SLOT(setAOOption(bool)));
+	aoLayout->addWidget(AOCheckBox);
+
+	aoLayout->addWidget(new QLabel("Number of iterations:"));
+	QSpinBox *AONumberIteration = new QSpinBox();
+	AONumberIteration->setValue(getAONumberRay());
+	AONumberIteration->setRange(0, 100000);
+	connect(AONumberIteration, SIGNAL(valueChanged(int)), this, SLOT (setAONumberRay(int)));
+	aoLayout->addWidget(AONumberIteration);
+
+	aoLayout->addWidget(new QLabel("Sphere radius (%):"));
+	QSpinBox *AOSphereRad = new QSpinBox();
+	AOSphereRad->setValue(getAOSphereRadius());
+	AOSphereRad->setRange(0, 100);
+	connect(AOSphereRad, SIGNAL(valueChanged(int)), this, SLOT (setAOSphereRadius(int)));
+	aoLayout->addWidget(AOSphereRad);
+
+	aoLayout->addWidget(new QLabel("Cone Angle:"));
+	QSpinBox *AOConeAng = new QSpinBox();
+	AOConeAng->setValue(getAOConeAngle());
+	AOConeAng->setRange(0, 90);
+	connect(AOConeAng, SIGNAL(valueChanged(int)), this, SLOT (setAOConeAngle(int)));
+	aoLayout->addWidget(AOConeAng);
+
+	aoLayout->addWidget(new QLabel("AO Coeff:"));
+	QDoubleSpinBox *AOCoeff = new QDoubleSpinBox();
+	AOCoeff->setValue(getAOCoeff());
+	AOCoeff->setRange(0.0, 1.0);
+	AOCoeff->setSingleStep(0.01);
+	connect(AOCoeff, SIGNAL(valueChanged(double)), this, SLOT (setAOCoeff(double)));
+	aoLayout->addWidget(AOCoeff);
+
+    layout->addWidget (aoGroupBox);
+
     
     QGroupBox * globalGroupBox = new QGroupBox ("Global Settings", controlWidget);
     QVBoxLayout * globalLayout = new QVBoxLayout (globalGroupBox);
@@ -252,4 +309,6 @@ void Window::initControlWidget () {
     layout->addWidget (globalGroupBox);
 
     layout->addStretch (0);
+	scrollArea->setWidget(controlWidget);
+
 }

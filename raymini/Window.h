@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include <QAction>
 #include <QToolBar>
+#include <QScrollArea>
 #include <QCheckBox>
 #include <QGroupBox>
 #include <QComboBox>
@@ -40,12 +41,19 @@ public slots :
   void setAOOption(bool option);
   void setAONumberRay(int nbRay);
   int getAONumberRay();
+  void setAOSphereRadius(int sphereRadius);
+  int getAOSphereRadius();
+  void setAOConeAngle(int coneAngle);
+  int getAOConeAngle();
+  void setAOCoeff(double coeff);
+  double getAOCoeff();
     
 private :
     void initControlWidget ();
         
     QActionGroup * actionGroup;
     QGroupBox * controlWidget;
+	QScrollArea * scrollArea;
     QString currentDirectory;
 
     GLViewer * viewer;
