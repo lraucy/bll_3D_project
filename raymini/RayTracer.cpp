@@ -208,18 +208,21 @@ Vec3Df RayTracer::getColor(const Vec3Df &camPos, const Vec3Df &dir) const {
 float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
   Scene * scene = Scene::getInstance();
   float epsilon = 0.1;
-  bool hasIntersectionShadow = false;
+  float intersectionShadow = 0.0;
 
-  Vec3Df shadowRayDirection = scene->getLights()[0].getPos() - intersectionPoint;
-  shadowRayDirection.normalize();
+  for (unsigned int i = 0; i < scene->getLights().size(); i++)
+  {
+	  Vec3Df shadowRayDirection = scene->getLights()[i].getPos() - intersectionPoint;
+	  shadowRayDirection.normalize();
+	  for (unsigned int k = 0; k < scene->getObjects().size(); k++) {
+		const Object &o = scene->getObjects()[k];
+		Ray ray(intersectionPoint + epsilon * shadowRayDirection - o.getTrans(), shadowRayDirection);
+		if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
+			intersectionShadow += 1.0;
+	  }
 
-  for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
-    const Object & o = scene->getObjects()[k];
-    Ray ray (intersectionPoint + epsilon * shadowRayDirection - o.getTrans (), shadowRayDirection);
-    if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
-      hasIntersectionShadow = true;
   }
-  return hasIntersectionShadow ? 0.0 : 1.1 ;
+  return 1.0 - intersectionShadow / scene->getLights().size();
 }
 
 float RayTracer::softShadowRay(const Vec3Df &intersectionPoint, 
@@ -228,21 +231,21 @@ float RayTracer::softShadowRay(const Vec3Df &intersectionPoint,
   float epsilon = 0.1;
   float counter = 0;
   
-  for(unsigned int i = 0; i < nbSamples; i++){
-    Vec3Df shadowRayDirection = ((scene->getLights()[0].getPos() + 
-				 Vec3Df((rand()/(double)RAND_MAX) * scene->getLights()[0].getRadius(),
-					(rand()/(double)RAND_MAX) * scene->getLights()[0].getRadius(),
-					(rand()/(double)RAND_MAX) * scene->getLights()[0].getRadius()))
-				 - intersectionPoint);
-    shadowRayDirection.normalize();
-    for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
-      const Object & o = scene->getObjects()[k];
-      Ray ray (intersectionPoint + epsilon * shadowRayDirection - o.getTrans (), shadowRayDirection);
-      if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
-		counter += (1./nbSamples);
-    }
+  for (unsigned int i = 0; i < scene->getLights().size(); i++) {
+	  for (unsigned int j = 0; j < nbSamples; j++) {
+		  Vec3Df shadowRayDirection = ((scene->getLights()[i].getPos() +
+					  Vec3Df((rand()/(double)RAND_MAX) * scene->getLights()[i].getRadius(),
+						  (rand()/(double)RAND_MAX) * scene->getLights()[i].getRadius(),
+						  (rand()/(double)RAND_MAX) * scene->getLights()[i].getRadius()))) - intersectionPoint;
+		  shadowRayDirection.normalize();
+		  for (unsigned int k = 0; k < scene->getObjects().size(); k++) {
+			const Object &o = scene->getObjects()[k];
+			Ray ray (intersectionPoint + epsilon * shadowRayDirection - o.getTrans (), shadowRayDirection);
+			if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
+				counter += (1.0/nbSamples/scene->getLights().size());
+		  }
+	  }
   }
-
   return 1. - counter;
 }
 
