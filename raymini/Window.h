@@ -38,6 +38,8 @@ public slots :
   void setShadowOption(int option);
   void setAaOption(int option);
   void setAOOption(bool option);
+  void setAONumberRay(int nbRay);
+  int getAONumberRay();
     
 private :
     void initControlWidget ();

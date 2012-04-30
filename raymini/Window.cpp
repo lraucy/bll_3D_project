@@ -157,6 +157,15 @@ void Window::setAOOption(bool option) {
     rayTracerInstance->setAOOption(option);
 }
 
+int Window::getAONumberRay() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    return rayTracerInstance->getAONbRay();
+}
+void Window::setAONumberRay(int NbRay) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setAONbRay(NbRay);
+}
+
 void Window::initControlWidget () {
     controlWidget = new QGroupBox ();
     QVBoxLayout * layout = new QVBoxLayout (controlWidget);
@@ -200,6 +209,11 @@ void Window::initControlWidget () {
     QCheckBox *AOCheckBox = new QCheckBox("Ambient Occlusion", rayGroupBox);
 	connect (AOCheckBox, SIGNAL(toggled (bool)), this, SLOT(setAOOption(bool)));
 	rayLayout->addWidget(AOCheckBox);
+	QSpinBox *AONumberIteration = new QSpinBox();
+	AONumberIteration->setValue(getAONumberRay());
+	AONumberIteration->setRange(0, 100000);
+	connect(AONumberIteration, SIGNAL(valueChanged(int)), this, SLOT (setAONumberRay(int)));
+	rayLayout->addWidget(AONumberIteration);
 
     // Anti aliasing options
     QComboBox *aaTypeList = new QComboBox(rayGroupBox);

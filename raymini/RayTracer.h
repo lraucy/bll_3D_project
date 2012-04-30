@@ -39,6 +39,8 @@ public:
   inline void setAOOption(const bool _aoOpt) { aoOpt = _aoOpt;}
   inline void setShadowOption(const int _shadowOpt) { shadowOpt = _shadowOpt;} 
   inline void setAaOption(const int _aaOpt) { aaOpt = _aaOpt;} 
+  inline void setAONbRay(unsigned int _aoNbRay) { aoNbRay = _aoNbRay;}
+  inline unsigned int getAONbRay() { return aoNbRay; }
   
     QImage render (const Vec3Df & camPos,
                    const Vec3Df & viewDirection,
@@ -50,7 +52,7 @@ public:
                    unsigned int screenHeight);
     
 protected:
-    inline RayTracer () {}
+    inline RayTracer () { aoNbRay = 10; }
     inline virtual ~RayTracer () {}
 	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
@@ -90,6 +92,7 @@ private:
   int shadowOpt;
   int aaOpt;
   bool aoOpt;
+  int aoNbRay;
 };
 
 

@@ -255,7 +255,6 @@ float RayTracer::shadowRay(const Vec3Df &intersectionPoint,
   return 1.0;
 }
 
-#define AMBIENT_OCCLUSION_NUMBER_RAY 10
 #define AMBIENT_OCCLUSION_SPHERE_RADIUS 5
 #define AMBIENT_OCCLUSION_CONE_ANGLE 1.00
 
@@ -263,7 +262,7 @@ float RayTracer::shadowRay(const Vec3Df &intersectionPoint,
 
 float RayTracer::ambientOcclusion(const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
 	if(aoOpt)
-		return 0.2 * 255 * computeAmbientOcclusion(intersectionPoint, normal, AMBIENT_OCCLUSION_NUMBER_RAY,
+		return 0.2 * 255 * computeAmbientOcclusion(intersectionPoint, normal, aoNbRay,
 					AMBIENT_OCCLUSION_SPHERE_RADIUS, AMBIENT_OCCLUSION_CONE_ANGLE);
 	else
 		return 0.0;
