@@ -16,7 +16,7 @@
 using namespace std;
 static RayTracer * instance = NULL;
 
-#define NB_DIR 10
+#define NB_DIR 1000
 RayTracer * RayTracer::getInstance () {
 	if (instance == NULL)
 		instance = new RayTracer ();
@@ -73,9 +73,9 @@ QImage RayTracer::render (const Vec3Df & camPos,
 			Vec3Df normal = getNormalAtIntersection(*objectIntersected, intersectionPoint, intersectionTriangle);
 	 
 			Vertex  intP(intersectionPoint, normal);
-				c = ambientOcclusion(scene, ray, *objectIntersected,intP);
-			//c = pathTracer(scene, ray, *objectIntersected,intP, 0);
-			//	c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
+			   c = ambientOcclusion(scene, ray, *objectIntersected,intP);
+			// c = pathTracer(scene, ray, *objectIntersected,intP, 0);
+			// c = getPhongBRDF(scene, ray, *objectIntersected, intersectionPoint, normal);
 			}
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
@@ -184,43 +184,31 @@ Vec3Df RayTracer::pathTracer(const Scene * scene, const Ray & ray, const Object 
   if(depth == MAX_DEPTH){
     color =  getPhongBRDF(scene, ray, intersectedObject, intP.getPos(), intP.getNormal());
     return color/(pow(2,depth));
-}
+  }
 
   vector<Vec3Df> direction = getPathTracingDirection(intP);
   Vec3Df pos = intP.getPos() + intersectedObject.getTrans();
 
   for(int i = 0; i<direction.size(); i++){
-   const Object * intObject = NULL;
+        const Object * intObject = NULL;
         Vec3Df intersectionPoint;
         Vec3Df lightColor(backgroundColor);
         Vec3Df intPos (pos + 10*direction[i]);
 	Triangle intersectionTriangle;
-        float d = 1.0;
-        float coeff = 0.0;
-	Ray newRay;
+
 	intObject = getObjectIntersected(scene,pos,direction[i],intersectionPoint,intersectionTriangle);
-	float a = 1.0;
-	float b=0.0;
-	float c=0.5;
-	float intensity = 1/(a+b*d+c*pow(d,2));
-	if(intensity < 1.0)intensity = 1.0;
+   
 	if(intObject != NULL){
 	  Ray newRay(pos, direction[i]);
 	  Vec3Df normal = getNormalAtIntersection(*intObject,intersectionPoint,intersectionTriangle);
 	  Vertex newIntVertex(intersectionPoint, normal);
 	  lightColor = this->pathTracer(scene, newRay, *intObject, newIntVertex, depth+1);
 	  intPos = newIntVertex.getPos() + intObject->getTrans();
-	  // d = sqrt((intPos[0]-pos[0])*(intPos[0]-pos[0]) +(intPos[1]-pos[1])*(intPos[1]-pos[1])+(intPos[2]-pos[2])*(intPos[2]-pos[2]));
-	  coeff = d/(scene->getBoundingBox().getRadius()*10.0);
-	  intensity = 1/(a+b*d+c*pow(d,2));
-	  if(intensity < 1.0)intensity = 1.0;	
-	  //pathTracingLights.push_back(Light(intPos, lightColor, 12.0));
         }
-	//pathTracingLights.push_back(Light(intPos, lightColor, 0.05*pow(1-coeff, 3)/(depth+1)));
-	pathTracingLights.push_back(Light(intPos, lightColor, 12.0));
+	pathTracingLights.push_back(Light(intPos, lightColor, 1.0));
   }
          color =  getPhongBRDF(scene, ray, intersectedObject, intP.getPos(), intP.getNormal()) / (scene->getLights().size());
-	 //  color += getPhongBRDFwithLights(scene, pathTracingLights, ray, intersectedObject, intP.getPos(), intP.getNormal())/pathTracingLights.size();
+	 color += getPhongBRDFwithLights(scene, pathTracingLights, ray, intersectedObject, intP.getPos(), intP.getNormal())/pathTracingLights.size();
          color /= 2.0*(float)(depth+1);
 
 return color;
@@ -231,12 +219,6 @@ std::vector<Vec3Df> RayTracer::getPathTracingDirection( Vertex & v) const{
   std::vector<Vec3Df> directions;
 
     Vec3Df normal = v.getNormal();
-
-    // Vec3Df p1(1.0,0.0,0.0);
-    //Vec3Df p2(1.0,0.0,0.0);
-    //p1.normalize();
-    //p2.normalize();
-    // std::cout << "produit scalaire entre "<< p1 << " et " << p2 << " " << Vec3Df::dotProduct(p1, p2)<<"\n";
 
     for (unsigned int i=0; i<NB_DIR; i++) {
 
@@ -250,14 +232,8 @@ std::vector<Vec3Df> RayTracer::getPathTracingDirection( Vertex & v) const{
 
 	randomDirection *= 0.4;
         randomDirection += normal;
-	//std::cout << "ray " << v.getNormal() << "\n";
-	//std::cout << "random direction " << randomDirection << "\n";
-	//std::cout << "dot product " << Vec3Df::dotProduct(normal, randomDirection) << "\n";
-     	//if(Vec3Df::dotProduct(normal, randomDirection)>1.0)std::cout << " dotproduct superieur à un \n";
+
 	randomDirection.normalize();
-	//std::cout << "ray " << v.getNormal() << "\n";
-	//std::cout << "random direction " << randomDirection << "\n";
-	//std::cout << "dot product " << Vec3Df::dotProduct(normal, randomDirection) << "\n";
 	directions.push_back(randomDirection);
     }
 
@@ -280,11 +256,8 @@ for(int i = 0; i<direction.size(); i++){
 	Triangle intersectionTriangle;
   
 	intObject = getObjectIntersected(scene,pos,direction[i],intPos,intersectionTriangle);
-
-	if(intObject == NULL){
-	  float d =  sqrt((intPos[0]-pos[0])*(intPos[0]-pos[0]) +(intPos[1]-pos[1])*(intPos[1]-pos[1])+(intPos[2]-pos[2])*(intPos[2]-pos[2]));
-	  //  d/= (scene->getBoundingBox().getRadius()*10.0);
-	  std::cout<<"d " << d << "\n";
+	float d =  sqrt((intPos[0]-pos[0])*(intPos[0]-pos[0]) +(intPos[1]-pos[1])*(intPos[1]-pos[1])+(intPos[2]-pos[2])*(intPos[2]-pos[2]));
+	  if(intObject == NULL){
 	  float intensity = 1/(a+b*d+c*pow(d,2));
 	  color+=(white*Vec3Df::dotProduct(intP.getNormal(),direction[i]))*intensity;
         }
@@ -294,7 +267,5 @@ for(int i = 0; i<direction.size(); i++){
  //color[0] = int(color[0]/8.0)*8.0;
  //color[1] = int(color[1]/8.0)*8.0;
  //color[2] = int(color[2]/8.0)*8.0;
-
- std::cout << "color occlusion" << color << "\n";
  return color;
 }
