@@ -41,6 +41,8 @@ public:
   inline void setAaOption(const int _aaOpt) { aaOpt = _aaOpt;} 
   inline void setAONbRay(unsigned int _aoNbRay) { aoNbRay = _aoNbRay;}
   inline unsigned int getAONbRay() { return aoNbRay; }
+  inline void setShadowNbRay(unsigned int _shadowNbRay) { shadowNbRay = _shadowNbRay;}
+  inline unsigned int getShadowNbRay() { return shadowNbRay; }
   inline void setAOSphereRadius(unsigned int _aoSphereRadius) { aoSphereRadius = _aoSphereRadius;}
   inline unsigned int getAOSphereRadius() { return aoSphereRadius; }
   inline void setAOConeAngle(unsigned int _aoConeAngle) { aoConeAngle = _aoConeAngle;}
@@ -58,7 +60,8 @@ public:
                    unsigned int screenHeight);
     
 protected:
-    inline RayTracer () { aoNbRay = 10; aoSphereRadius = 5; aoConeAngle = 70; aoCoeff = 0.2;}
+    inline RayTracer () { aoNbRay = 10; aoSphereRadius = 5; aoConeAngle = 70; aoCoeff = 0.2;
+							shadowNbRay = 10; }
     inline virtual ~RayTracer () {}
 	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
@@ -77,8 +80,7 @@ protected:
 	Vec3Df getColorFromPixelWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const;
 	Vec3Df getColorFromPixelWithAAx3(const Vec3Df &camPos, const Vec3Df &dir) const;
       
-  float shadowRay(const Vec3Df &intersectionPoint, 
-						const unsigned int nbSamples) const;    
+  float shadowRay(const Vec3Df &intersectionPoint) const;
   float hardShadowRay(const Vec3Df &intersectionPoint) const;
   
   float softShadowRay(const Vec3Df &intersectionPoint, 
@@ -97,6 +99,7 @@ private:
 	float tanY;
   int shadowOpt;
   int aaOpt;
+  unsigned int shadowNbRay;
   bool aoOpt;
   unsigned int aoNbRay;
   unsigned int aoSphereRadius;

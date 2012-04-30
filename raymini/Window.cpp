@@ -157,6 +157,15 @@ void Window::setAOOption(bool option) {
     rayTracerInstance->setAOOption(option);
 }
 
+int Window::getShadowNumberRay() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    return rayTracerInstance->getShadowNbRay();
+}
+void Window::setShadowNumberRay(int NbRay) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setShadowNbRay(NbRay);
+}
+
 int Window::getAONumberRay() {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
     return rayTracerInstance->getAONbRay();
@@ -249,6 +258,13 @@ void Window::initControlWidget () {
     shadowTypeList->addItem("Soft shadow");
     connect (shadowTypeList, SIGNAL (activated (int)), this, SLOT (setShadowOption (int)));
     rayLayout->addWidget (shadowTypeList);
+
+	rayLayout->addWidget(new QLabel("Nb of ray soft shadow:"));
+	QSpinBox *shadowNumberRay = new QSpinBox();
+	shadowNumberRay->setValue(getShadowNumberRay());
+	shadowNumberRay->setRange(0, 1000000);
+	connect(shadowNumberRay, SIGNAL(valueChanged(int)), this, SLOT (setShadowNumberRay(int)));
+	rayLayout->addWidget(shadowNumberRay);
     
     layout->addWidget (rayGroupBox);
 
@@ -259,7 +275,7 @@ void Window::initControlWidget () {
 	connect (AOCheckBox, SIGNAL(toggled (bool)), this, SLOT(setAOOption(bool)));
 	aoLayout->addWidget(AOCheckBox);
 
-	aoLayout->addWidget(new QLabel("Number of iterations:"));
+	aoLayout->addWidget(new QLabel("Number of ray:"));
 	QSpinBox *AONumberIteration = new QSpinBox();
 	AONumberIteration->setValue(getAONumberRay());
 	AONumberIteration->setRange(0, 100000);

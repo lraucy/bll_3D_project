@@ -146,7 +146,7 @@ Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const
 		c = getPhongBRDF(ray, *objectIntersected, intersectionPointGlobalMark, normal);
 		c += ambientOcclusion(intersectionPointGlobalMark, normal) * objectIntersected->getMaterial().getColor();
 
-		float coef = shadowRay(intersectionPointGlobalMark, 10);
+		float coef = shadowRay(intersectionPointGlobalMark);
 		c = c * Vec3Df(coef, coef, coef);
 	}
 	return c;
@@ -239,8 +239,7 @@ float RayTracer::softShadowRay(const Vec3Df &intersectionPoint,
   return 1. - counter;
 }
 
-float RayTracer::shadowRay(const Vec3Df &intersectionPoint, 
-			       const unsigned int nbSamples) const{
+float RayTracer::shadowRay(const Vec3Df &intersectionPoint) const{
   switch(shadowOpt){
   case RAYTRACER_NO_SHADOW: 
     return 1.0;
@@ -249,15 +248,11 @@ float RayTracer::shadowRay(const Vec3Df &intersectionPoint,
     return hardShadowRay(intersectionPoint);
     break;
   case RAYTRACER_SOFT_SHADOW:
-    return softShadowRay(intersectionPoint, nbSamples);
+    return softShadowRay(intersectionPoint, shadowNbRay);
     break;
   }
   return 1.0;
 }
-
-#define AMBIENT_OCCLUSION_SPHERE_RADIUS 5
-#define AMBIENT_OCCLUSION_CONE_ANGLE 1.00
-
 
 
 float RayTracer::ambientOcclusion(const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
