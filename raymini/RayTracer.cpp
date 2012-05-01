@@ -246,10 +246,11 @@ float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
   for (unsigned int i = 0; i < scene->getLights().size(); i++)
   {
 	  Vec3Df shadowRayDirection = scene->getLights()[i].getPos() - intersectionPoint;
-	  shadowRayDirection.normalize();
 	  for (unsigned int k = 0; k < scene->getObjects().size(); k++) {
 		const Object &o = scene->getObjects()[k];
 		Ray ray(intersectionPoint + epsilon * shadowRayDirection - o.getTrans(), shadowRayDirection);
+		ray.isASegment = true;
+		ray.intersectReverseTriangles = true;
 		if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
 			intersectionShadow += 1.0;
 	  }
@@ -267,10 +268,11 @@ float RayTracer::softShadowRay(const Vec3Df &intersectionPoint,
   for (unsigned int i = 0; i < scene->getLights().size(); i++) {
 	  for (unsigned int j = 0; j < nbSamples; j++) {
 		  Vec3Df shadowRayDirection = scene->getLights()[i].getRandomPoint() - intersectionPoint;
-		  shadowRayDirection.normalize();
 		  for (unsigned int k = 0; k < scene->getObjects().size(); k++) {
 			const Object &o = scene->getObjects()[k];
 			Ray ray (intersectionPoint + epsilon * shadowRayDirection - o.getTrans (), shadowRayDirection);
+			ray.isASegment = true;
+			ray.intersectReverseTriangles = true;
 			if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
 				counter += (1.0/nbSamples/scene->getLights().size());
 		  }
