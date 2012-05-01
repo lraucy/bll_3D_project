@@ -18,9 +18,9 @@
 
 class Ray {
 public:
-    inline Ray () {}
+    inline Ray () {isASegment = false; intersectReverseTriangles = false;}
     inline Ray (const Vec3Df & origin, const Vec3Df & direction)
-        : origin (origin), direction (direction) {}
+        : origin (origin), direction (direction) { isASegment = false; intersectReverseTriangles = false; }
     inline virtual ~Ray () {}
 
     inline const Vec3Df & getOrigin () const { return origin; }
@@ -39,6 +39,9 @@ public:
 	bool intersect (const Mesh & mesh, KdTreeElement *kdTree) const;
 	bool intersectInSphere (const Mesh &mesh, KdTreeElement *kdTree,
 		const Vec3Df &originSphere, float R) const;
+
+	bool isASegment;
+	bool intersectReverseTriangles;
     
 private:
     Vec3Df origin;
