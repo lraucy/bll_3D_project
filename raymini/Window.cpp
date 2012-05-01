@@ -35,6 +35,7 @@
 #include <QStatusBar>
 
 #include "RayTracer.h"
+#include "MaterialQObject.h"
 
 using namespace std;
 
@@ -323,6 +324,17 @@ void Window::initControlWidget () {
 
     layout->addWidget (aoGroupBox);
 
+	// Objects properties
+    QGroupBox * objectsGroupBox = new QGroupBox ("Objects Properties", controlWidget);
+	QVBoxLayout * objectsLayout = new QVBoxLayout(objectsGroupBox);
+
+	Scene *scene = Scene::getInstance();
+
+	for (unsigned int i = 0; i < scene->getObjects().size(); i++)
+		objectsLayout->addWidget(getWidgetObject(scene->getObjects()[i], objectsGroupBox));
+
+	layout->addWidget(objectsGroupBox);
+
     
     QGroupBox * globalGroupBox = new QGroupBox ("Global Settings", controlWidget);
     QVBoxLayout * globalLayout = new QVBoxLayout (globalGroupBox);
@@ -343,5 +355,24 @@ void Window::initControlWidget () {
 
     layout->addStretch (0);
 	scrollArea->setWidget(controlWidget);
+
+}
+
+QGroupBox * Window::getWidgetObject (Object &o, QWidget *parent) {
+	QGroupBox *objectGroupBox = new QGroupBox(o.getName(), parent);
+	QVBoxLayout *objectLayout = new QVBoxLayout(objectGroupBox);
+
+	objectLayout->addWidget(new QLabel("Reflectance:"));
+
+	QDoubleSpinBox *mirrorSpinBox = new QDoubleSpinBox();
+	mirrorSpinBox->setValue(o.getMaterial().getReflectance());
+	mirrorSpinBox->setRange(0.0, 10.0);
+	mirrorSpinBox->setSingleStep(0.05);
+
+	connect(mirrorSpinBox, SIGNAL(valueChanged(double)), new MaterialQObject(&o.getMaterial()),
+			SLOT(setReflectance(double)));
+
+	objectLayout->addWidget(mirrorSpinBox);
+	return objectGroupBox;
 
 }

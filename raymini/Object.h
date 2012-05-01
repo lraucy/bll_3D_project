@@ -10,15 +10,19 @@
 
 #include <iostream>
 #include <vector>
+#include <QString>
 
 #include "Mesh.h"
 #include "Material.h"
 #include "BoundingBox.h"
 
-class Object {
+class Object{
 public:
     inline Object () {}
     inline Object (const Mesh & mesh, const Material & mat) : mesh (mesh), mat (mat) {
+        updateBoundingBox ();
+    }
+    inline Object (const Mesh & mesh, const Material & mat, const QString &name) : mesh (mesh), mat (mat), name(name) {
         updateBoundingBox ();
     }
     virtual ~Object () {}
@@ -34,12 +38,15 @@ public:
 
     inline const BoundingBox & getBoundingBox () const { return bbox; }
     void updateBoundingBox ();
+
+	inline const QString& getName() const { return name;}
     
 private:
     Mesh mesh;
     Material mat;
     BoundingBox bbox;
     Vec3Df trans;
+	QString name;
 };
 
 

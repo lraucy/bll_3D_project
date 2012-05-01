@@ -54,6 +54,7 @@ public slots :
     
 private :
     void initControlWidget ();
+	QGroupBox * getWidgetObject (Object &o, QWidget *parent);
         
     QActionGroup * actionGroup;
     QGroupBox * controlWidget;
