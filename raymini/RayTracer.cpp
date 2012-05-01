@@ -31,6 +31,21 @@ inline int clamp (float f, int inf, int sup) {
 	return (v < inf ? inf : (v > sup ? sup : v));
 }
 
+void RayTracer::setShadowRadius(float _shadowRadius) {
+	Scene * scene = Scene::getInstance();
+	if(scene->getLights().size() > 0)
+		scene->getLights()[0].setRadius(_shadowRadius);
+}
+
+float RayTracer::getShadowRadius() {
+	Scene * scene = Scene::getInstance();
+	if(scene->getLights().size() > 0)
+		return scene->getLights()[0].getRadius();
+	else
+		return 0.0;
+}
+
+
 // POINT D'ENTREE DU PROJET.
 // Le code suivant ray trace uniquement la boite englobante de la scene.
 // Il faut remplacer ce code par une veritable raytracer
@@ -233,10 +248,7 @@ float RayTracer::softShadowRay(const Vec3Df &intersectionPoint,
   
   for (unsigned int i = 0; i < scene->getLights().size(); i++) {
 	  for (unsigned int j = 0; j < nbSamples; j++) {
-		  Vec3Df shadowRayDirection = ((scene->getLights()[i].getPos() +
-					  Vec3Df((rand()/(double)RAND_MAX) * scene->getLights()[i].getRadius(),
-						  (rand()/(double)RAND_MAX) * scene->getLights()[i].getRadius(),
-						  (rand()/(double)RAND_MAX) * scene->getLights()[i].getRadius()))) - intersectionPoint;
+		  Vec3Df shadowRayDirection = scene->getLights()[i].getRandomPoint() - intersectionPoint;
 		  shadowRayDirection.normalize();
 		  for (unsigned int k = 0; k < scene->getObjects().size(); k++) {
 			const Object &o = scene->getObjects()[k];

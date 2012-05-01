@@ -43,6 +43,8 @@ public:
   inline unsigned int getAONbRay() { return aoNbRay; }
   inline void setShadowNbRay(unsigned int _shadowNbRay) { shadowNbRay = _shadowNbRay;}
   inline unsigned int getShadowNbRay() { return shadowNbRay; }
+  void setShadowRadius(float _shadowRadius);
+  float getShadowRadius();
   inline void setAOSphereRadius(unsigned int _aoSphereRadius) { aoSphereRadius = _aoSphereRadius;}
   inline unsigned int getAOSphereRadius() { return aoSphereRadius; }
   inline void setAOConeAngle(unsigned int _aoConeAngle) { aoConeAngle = _aoConeAngle;}

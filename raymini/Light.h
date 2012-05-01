@@ -20,6 +20,9 @@ public:
 	  : pos (pos), color (color), intensity (intensity), radius (0.0f) {}
   inline Light (const Vec3Df & pos, const Vec3Df & color, float intensity, float radius)
 	  : pos (pos), color (color), intensity (intensity), radius (radius) {}
+  inline Light (const Vec3Df & pos, const Vec3Df & color, float intensity, float radius,
+		  const Vec3Df &normal)
+	  : pos (pos), color (color), intensity (intensity), radius (radius) { setNormal(normal); }
     virtual ~Light () {}
 
     inline const Vec3Df & getPos () const { return pos; }
@@ -31,12 +34,17 @@ public:
     inline void setColor (const Vec3Df & c) { color = c; }
     inline void setIntensity (float i) { intensity = i; }
     inline void setRadius (float r) { radius = r; }
+	void setNormal(const Vec3Df &normal);
+	Vec3Df getRandomPoint() const;
 
     
 private:
     Vec3Df pos;
     Vec3Df color;
     float intensity;
+	Vec3Df normal;
+	Vec3Df secondVector;
+	Vec3Df thirdVector;
   float radius;
 };
 

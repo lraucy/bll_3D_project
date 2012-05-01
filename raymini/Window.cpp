@@ -166,6 +166,15 @@ void Window::setShadowNumberRay(int NbRay) {
     rayTracerInstance->setShadowNbRay(NbRay);
 }
 
+double Window::getShadowRadius() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    return rayTracerInstance->getShadowRadius();
+}
+void Window::setShadowRadius(double shadowRadius) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setShadowRadius(shadowRadius);
+}
+
 int Window::getAONumberRay() {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
     return rayTracerInstance->getAONbRay();
@@ -259,12 +268,20 @@ void Window::initControlWidget () {
     connect (shadowTypeList, SIGNAL (activated (int)), this, SLOT (setShadowOption (int)));
     rayLayout->addWidget (shadowTypeList);
 
-	rayLayout->addWidget(new QLabel("Nb of ray soft shadow:"));
+	rayLayout->addWidget(new QLabel("Nb ray soft shadow:"));
 	QSpinBox *shadowNumberRay = new QSpinBox();
 	shadowNumberRay->setValue(getShadowNumberRay());
 	shadowNumberRay->setRange(0, 1000000);
 	connect(shadowNumberRay, SIGNAL(valueChanged(int)), this, SLOT (setShadowNumberRay(int)));
 	rayLayout->addWidget(shadowNumberRay);
+
+	rayLayout->addWidget(new QLabel("Radius SShadow L1:"));
+	QDoubleSpinBox *shadowRadius = new QDoubleSpinBox();
+	shadowRadius->setValue(getShadowRadius());
+	shadowRadius->setRange(0, 100);
+	shadowRadius->setSingleStep(0.01);
+	connect(shadowRadius, SIGNAL(valueChanged(double)), this, SLOT (setShadowRadius(double)));
+	rayLayout->addWidget(shadowRadius);
     
     layout->addWidget (rayGroupBox);
 
