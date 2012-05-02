@@ -53,6 +53,12 @@ public slots :
   double getAOCoeff();
   void rayTraceImage () ;
   void pathTraceImage () ;
+  int getPathTraceNumberRay() ;
+  void setPathTraceNumberRay(int NbRay) ;
+  double getPathTraceDepth() ;
+  void setPathTraceDepth(int depth) ;
+  double getPathTraceAngle() ;
+  void setPathTraceAngle(double angle) ;
 
 private :
     void initControlWidget ();

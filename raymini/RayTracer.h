@@ -56,6 +56,13 @@ public:
   inline void setAOCoeff(float _aoCoeff) { aoCoeff = _aoCoeff;}
   inline float getAOCoeff() { return aoCoeff; }
   
+  inline void setPathTraceNbRay(unsigned int _pathTraceNbRay) { pathTraceNbRay = _pathTraceNbRay;}
+  inline unsigned int getPathTraceNbRay() { return pathTraceNbRay; }
+  inline void setPathTraceAngle(float _pathTraceAngle) { pathTraceAngle = _pathTraceAngle;}
+  inline float getPathTraceAngle() { return pathTraceAngle; }
+  inline void setPathTraceDepth(int _pathTraceDepth) { pathTraceDepth = _pathTraceDepth;}
+  inline float getPathTraceDepth() { return pathTraceDepth; }
+  
     QImage render (const Vec3Df & camPos,
                    const Vec3Df & viewDirection,
                    const Vec3Df & upVector,
@@ -68,7 +75,7 @@ public:
     
 protected:
     inline RayTracer () { aoNbRay = 10; aoSphereRadius = 5; aoConeAngle = 70; aoCoeff = 0.2;
-							shadowNbRay = 10; aoOpt = false;}
+	  shadowNbRay = 10; aoOpt = false; pathTraceNbRay = 5; pathTraceAngle = M_PI/2; pathTraceDepth = 2;}
     inline virtual ~RayTracer () {}
 	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
@@ -122,6 +129,10 @@ private:
   unsigned int aoSphereRadius;
   unsigned int aoConeAngle;
   float aoCoeff;
+  unsigned int pathTraceNbRay;
+  float pathTraceAngle;
+  float pathTraceDepth;
+  
 };
 
 

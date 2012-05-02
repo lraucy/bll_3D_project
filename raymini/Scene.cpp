@@ -99,7 +99,7 @@ void Scene::buildDefaultScene () {
   Mesh ramMesh;
   ramMesh.loadOFF ("models/ram.off");
   Material ramMat (1.f, 1.f, Vec3Df (1.f, .6f, .2f));
-  Object ram (ramMesh, ramMat);
+  Object ram (ramMesh, ramMat, QString("Biquette"));
   ram.setTrans (Vec3Df (1.f, 0.5f, 0.f));
   objects.push_back (ram);
     
@@ -123,6 +123,6 @@ void Scene::buildDefaultScene () {
   Light l (Vec3Df (0.0f, 0.0f, 4.9f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
   lights.push_back (l);
   Light l2 (Vec3Df (-3.0f, -3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
-  //     lights.push_back (l2);
+	      //lights.push_back (l2);
 
 }

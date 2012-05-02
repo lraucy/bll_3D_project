@@ -171,7 +171,7 @@ int Window::getShadowNumberRay() {
 }
 void Window::setShadowNumberRay(int NbRay) {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
-    rayTracerInstance->setShadowNbRay(NbRay);
+  rayTracerInstance->setShadowNbRay((unsigned int)NbRay);
 }
 
 double Window::getShadowRadius() {
@@ -181,6 +181,33 @@ double Window::getShadowRadius() {
 void Window::setShadowRadius(double shadowRadius) {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
     rayTracerInstance->setShadowRadius(shadowRadius);
+}
+
+int Window::getPathTraceNumberRay() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    return rayTracerInstance->getPathTraceNbRay();
+}
+void Window::setPathTraceNumberRay(int NbRay) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setPathTraceNbRay(NbRay);
+}
+
+double Window::getPathTraceDepth() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    return rayTracerInstance->getPathTraceDepth();
+}
+void Window::setPathTraceDepth(int depth) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setPathTraceDepth(depth);
+}
+
+double Window::getPathTraceAngle() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    return rayTracerInstance->getPathTraceAngle();
+}
+void Window::setPathTraceAngle(double angle) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setPathTraceAngle(angle);
 }
 
 int Window::getAONumberRay() {
@@ -272,7 +299,6 @@ void Window::initControlWidget () {
     connect (aaTypeList, SIGNAL (activated (int)), this, SLOT (setAaOption (int)));
     rayLayout->addWidget (aaTypeList);
     
-
     // Shadows options
     QComboBox *shadowTypeList = new QComboBox(rayGroupBox);
     shadowTypeList->addItem("No shadow");
@@ -297,6 +323,35 @@ void Window::initControlWidget () {
 	rayLayout->addWidget(shadowRadius);
     
     layout->addWidget (rayGroupBox);
+
+    // Path tracing options
+    QGroupBox * ptGroupBox = new QGroupBox ("Path tracing", controlWidget);
+    QVBoxLayout * ptLayout = new QVBoxLayout (ptGroupBox);
+    ptLayout->addWidget(new QLabel("Nb ray pathTrace:"));
+    QSpinBox *pathTraceNumberRay = new QSpinBox();
+    pathTraceNumberRay->setValue(getPathTraceNumberRay());
+    pathTraceNumberRay->setRange(0, 1000000);
+    connect(pathTraceNumberRay, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceNumberRay(int)));
+    ptLayout->addWidget(pathTraceNumberRay);
+
+    ptLayout->addWidget(new QLabel("Angle for path tracing rays:"));
+    QDoubleSpinBox *pathTraceAngle = new QDoubleSpinBox();
+    pathTraceAngle->setValue(getPathTraceAngle());
+    pathTraceAngle->setRange(0, M_PI);
+    pathTraceAngle->setSingleStep(0.01);
+    connect(pathTraceAngle, SIGNAL(valueChanged(double)), this, SLOT (setPathTraceAngle(double)));
+    ptLayout->addWidget(pathTraceAngle);
+    
+    ptLayout->addWidget(new QLabel("Depth:"));
+    QSpinBox *pathTraceDepth = new QSpinBox();
+    pathTraceDepth->setValue(getPathTraceDepth());
+    pathTraceDepth->setRange(0, 1000000);
+    pathTraceDepth->setSingleStep(1);
+    connect(pathTraceDepth, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceDepth(int)));
+    ptLayout->addWidget(pathTraceDepth);
+    
+    layout->addWidget (ptGroupBox);
+    
 
     // Ambient Occlusion Options
     QGroupBox * aoGroupBox = new QGroupBox ("Ambient Occlusion", controlWidget);

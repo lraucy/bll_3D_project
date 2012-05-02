@@ -191,13 +191,13 @@ Vec3Df RayTracer::pathTracerRec(const Ray & ray, const Object & intersectedObjec
   float c=0.5;
   float intensity;
   float distance;
-  if(depth == MAX_DEPTH){
+  if(depth == pathTraceDepth){
     color =  getPhongBRDF(ray, intersectedObject, intP.getPos(), intP.getNormal());
     color /= (pow(2, depth));
     return color;
   }
 
-  std::vector<Vec3Df> direction = getRandomDirections(intP, M_PI/2);
+  std::vector<Vec3Df> direction = getRandomDirections(intP, pathTraceAngle);
   Vec3Df pos = intP.getPos() + intersectedObject.getTrans();
   
   for(unsigned int i = 0; i<direction.size(); i++){
@@ -239,7 +239,7 @@ std::vector<Vec3Df> RayTracer::getRandomDirections(const Vertex & v, const float
   secondVec.normalize();
   thirdVec.normalize();
 
-  for (unsigned int i=0; i<NB_DIR; i++) {
+  for (unsigned int i=0; i<pathTraceNbRay; i++) {
     Ray *ray = Ray::getRandomRay(v.getPos(), normal, secondVec, thirdVec, angle);
     directions.push_back(ray->getDirection());
   }
