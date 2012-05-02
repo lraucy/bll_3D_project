@@ -22,7 +22,7 @@ public:
         : diffuse (diffuse), specular (specular), color (color), reflectance (0.0f), emitance(Vec3Df(0,0,0)) {}
 	inline Material (float diffuse, float specular, const Vec3Df & color, float reflectance)
         : diffuse (diffuse), specular (specular), color (color), reflectance (reflectance), emitance(Vec3Df(0,0,0)){}
-	inline Material (float diffuse, float specular, const Vec3Df & color, Vec3Df emitance)
+	inline Material (float diffuse, float specular, const Vec3Df & color, const Vec3Df &emitance)
         : diffuse (diffuse), specular (specular), color (color), emitance(emitance){}
     virtual ~Material () {}
 

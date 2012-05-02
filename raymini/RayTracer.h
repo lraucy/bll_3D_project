@@ -51,8 +51,8 @@ public:
   inline unsigned int getAOConeAngle() { return aoConeAngle; }
   inline void setAOCoeff(float _aoCoeff) { aoCoeff = _aoCoeff;}
   inline float getAOCoeff() { return aoCoeff; }
-	Vec3Df tracePath(const Vec3Df &camPos, const Vec3Df &dir, int depth) const;
-	Vec3Df getRandomDir(const Vec3Df &normal) const;
+	Vec3Df tracePath(const Ray &ray, int depth) const;
+	Ray * getRandomRay(const Vec3Df &origin, const Vec3Df &normal) const;
   
     QImage render (const QImage &image_, int iteration,
 				   const Vec3Df & camPos,
@@ -76,6 +76,8 @@ protected:
 
 	Vec3Df getPhongBRDF(const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
+	Vec3Df getPhongBRDFTrace(const Ray &rayIn, const Ray &rayOut, const Object &o,
+			const Vec3Df &normal) const;
 
 	Vec3Df getPhongBRDFReflectance(const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;

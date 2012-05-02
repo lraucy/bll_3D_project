@@ -54,14 +54,21 @@ void Scene::buildDefaultScene () {
 
     Mesh ceilingMesh;
     ceilingMesh.loadOFF ("models/ceiling.off");
-    Material ceilingMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), 0.f) ;
+    Material ceilingMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), 0.0f) ;
     Object ceiling (ceilingMesh, ceilingMat, "Ground");
     ceiling.setTrans(Vec3Df(0.f, 0.f, 4.f));
     objects.push_back (ceiling);
 
+    //Mesh ceilingLampMesh;
+    //ceilingLampMesh.loadOFF ("models/ceilingLamp.off");
+    //Material ceilingLampMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), Vec3Df(1.0f, 1.0f, 1.0f)) ;
+    //Object ceilingLamp (ceilingLampMesh, ceilingLampMat, "Ground");
+    //ceilingLamp.setTrans(Vec3Df(1.f, 1.f, 3.95f));
+    //objects.push_back (ceilingLamp);
+
 	Mesh wallRightMesh;
     wallRightMesh.loadOFF ("models/WallRight.off");
-    Material wallRightMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), 0.f) ;
+    Material wallRightMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), Vec3Df(255.0,255.0, 255.0)) ;
     Object wallRight (wallRightMesh, wallRightMat, "WallRight");
     wallRight.setTrans(Vec3Df(2.f, 0.f, 2.f));
     objects.push_back (wallRight);
@@ -110,6 +117,4 @@ void Scene::buildDefaultScene () {
 
     Light l1 (Vec3Df (0.0f, 0.0f, 3.6f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 1.0f, Vec3Df(0.f, 0.f, -3.6f));
     lights.push_back (l1);
-    Light l2 (Vec3Df (0.0f, 5.0f, 5.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 1.0f, Vec3Df(0.0f, -5.0f, -5.0f));
-    lights.push_back (l2);
 }
