@@ -130,26 +130,26 @@ Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &in
 	float shininess = 16.0f;
 	Vec3Df colorVect = o.getMaterial().getColor();
 
-	float diffuseTerm = 0.0;
-	float specTerm = 0.0;
+	Vec3Df diffuseTerm = Vec3Df();
+	Vec3Df specTerm = Vec3Df();
 
 	for (unsigned int i = 0; i < scene->getLights().size(); i++) {
-		Vec3Df toLight = scene->getLights()[i].getPos() - intersectionPoint;
+	  Light l = scene->getLights()[i];
+		Vec3Df toLight = l.getPos() - intersectionPoint;
 		toLight.normalize();
 		Vec3Df r = (ray.getOrigin() - intersectionPoint);
 		r.normalize();
 		Vec3Df ref = 2*Vec3Df::dotProduct(normal, toLight)*normal - toLight;
 		ref.normalize();
 
-		diffuseTerm += std::max(Vec3Df::dotProduct(toLight, normal), 0.0f);
-		specTerm += pow(std::max(Vec3Df::dotProduct(ref, r), 0.0f), shininess);
+		diffuseTerm += l.getIntensity() * l.getColor() * std::max(Vec3Df::dotProduct(toLight, normal), 0.0f);
+		specTerm += l.getIntensity() * l.getColor() * pow(std::max(Vec3Df::dotProduct(ref, r), 0.0f), shininess);
 	}
 
-	float color = specRef * specTerm + diffuseRef*diffuseTerm;
-	color = color*255;
-	return Vec3Df(color*colorVect[0], color*colorVect[1], color*colorVect[2]);
+	Vec3Df color = specRef * specTerm + diffuseRef*diffuseTerm;
+	color = color * 255;
+	return color * colorVect;
 }
-
 
 Vec3Df RayTracer::getPhongBRDFReflectance(const Ray &ray, const Object &o, const Vec3Df &intersectionPoint,
 					  const Vec3Df &normal) const{
