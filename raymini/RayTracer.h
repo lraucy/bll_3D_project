@@ -51,8 +51,11 @@ public:
   inline unsigned int getAOConeAngle() { return aoConeAngle; }
   inline void setAOCoeff(float _aoCoeff) { aoCoeff = _aoCoeff;}
   inline float getAOCoeff() { return aoCoeff; }
+	Vec3Df tracePath(const Vec3Df &camPos, const Vec3Df &dir, int depth) const;
+	Vec3Df getRandomDir(const Vec3Df &normal) const;
   
-    QImage render (const Vec3Df & camPos,
+    QImage render (const QImage &image_, int iteration,
+				   const Vec3Df & camPos,
                    const Vec3Df & viewDirection,
                    const Vec3Df & upVector,
                    const Vec3Df & rightVector,
@@ -63,7 +66,7 @@ public:
     
 protected:
     inline RayTracer () { aoNbRay = 10; aoSphereRadius = 5; aoConeAngle = 70; aoCoeff = 0.2;
-							shadowNbRay = 10; aoOpt = false;}
+							shadowNbRay = 10; aoOpt = false; firstExec = true;}
     inline virtual ~RayTracer () {}
 	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
@@ -110,6 +113,8 @@ private:
   unsigned int aoSphereRadius;
   unsigned int aoConeAngle;
   float aoCoeff;
+  bool firstExec;
+  Vec3Df moyenne;
 };
 
 

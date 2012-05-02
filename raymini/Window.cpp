@@ -80,14 +80,16 @@ void Window::renderRayImage () {
     unsigned int screenHeight = cam->screenHeight ();
     QTime timer;
     timer.start ();
-    viewer->setRayImage(rayTracer->render (camPos, viewDirection, upVector, rightVector,
-                        fieldOfView, aspectRatio, screenWidth, screenHeight));
-    statusBar()->showMessage(QString ("Raytracing performed in ") +
-                             QString::number (timer.elapsed ()) +
-                             QString ("ms at ") +
-                             QString::number (screenWidth) + QString ("x") + QString::number (screenHeight) +
-                             QString (" screen resolution"));
-    viewer->setDisplayMode (GLViewer::RayDisplayMode);
+	for (unsigned int i = 0; i < 5000; i++) {
+		viewer->setRayImage(rayTracer->render (viewer->getRayImage(), i, camPos, viewDirection, upVector, rightVector,
+							fieldOfView, aspectRatio, screenWidth, screenHeight));
+		statusBar()->showMessage(QString ("Raytracing performed in ") +
+								 QString::number (timer.elapsed ()) +
+								 QString ("ms at ") +
+								 QString::number (screenWidth) + QString ("x") + QString::number (screenHeight) +
+								 QString (" screen resolution"));
+		viewer->setDisplayMode (GLViewer::RayDisplayMode);
+	}
 }
 
 void Window::setBGColor () {
