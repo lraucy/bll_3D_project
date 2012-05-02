@@ -30,7 +30,7 @@ public:
     static void showStatusMessage (const QString & msg);  
     
 public slots :
-    void renderRayImage ();
+    void renderRayImage (unsigned int mode);
     void setBGColor ();
     void showRayImage ();
     void exportGLImage ();
@@ -51,7 +51,9 @@ public slots :
   int getAOConeAngle();
   void setAOCoeff(double coeff);
   double getAOCoeff();
-    
+  void rayTraceImage () ;
+  void pathTraceImage () ;
+
 private :
     void initControlWidget ();
 	QGroupBox * getWidgetObject (Object &o, QWidget *parent);

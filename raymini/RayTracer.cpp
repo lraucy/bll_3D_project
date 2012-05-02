@@ -56,7 +56,8 @@ QImage RayTracer::render (const Vec3Df & camPos,
 		float fieldOfView,
 		float aspectRatio,
 		unsigned int screenWidth,
-		unsigned int screenHeight) {
+		unsigned int screenHeight, 
+		unsigned int mode) {
 
 	this->screenWidth = screenWidth;
 	this->screenHeight = screenHeight;
@@ -77,8 +78,18 @@ QImage RayTracer::render (const Vec3Df & camPos,
 			Vec3Df intersectionPoint;
 			dir.normalize ();
 
-			Vec3Df c = getColor(camPos, dir);
-			
+			Vec3Df c;
+			switch(mode) {
+			case RAYTRACER_RAYTRACING_MODE:
+			  c = getColor(camPos, dir);
+			  break;
+			case RAYTRACER_PATHTRACING_MODE:
+			  c = pathTracer(camPos, dir);
+			  break;
+			default:
+			  c = getColor(camPos, dir);
+			  break;
+			}
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
 	}
@@ -120,10 +131,7 @@ Vec3Df RayTracer::getNormalAtIntersection(const Object &o, const Vec3Df &interse
 	return normal;
 }
 
-Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &intersectionPoint,
-					const Vec3Df &normal) const{
-
-	Scene * scene = Scene::getInstance();
+Vec3Df RayTracer::getPhongBRDFWithLights(const Ray &ray, const Object &o, const Vec3Df &intersectionPoint, const Vec3Df &normal, const std::vector<Light> lights) const{
 
 	float diffuseRef = o.getMaterial().getDiffuse();
 	float specRef = o.getMaterial().getSpecular();
@@ -133,8 +141,8 @@ Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &in
 	Vec3Df diffuseTerm = Vec3Df();
 	Vec3Df specTerm = Vec3Df();
 
-	for (unsigned int i = 0; i < scene->getLights().size(); i++) {
-	  Light l = scene->getLights()[i];
+	for (unsigned int i = 0; i < lights.size(); i++) {
+	  Light l = lights[i];
 		Vec3Df toLight = l.getPos() - intersectionPoint;
 		toLight.normalize();
 		Vec3Df r = (ray.getOrigin() - intersectionPoint);
@@ -150,6 +158,95 @@ Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &in
 	color = color * 255;
 	return color * colorVect;
 }
+
+Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
+  return getPhongBRDFWithLights(ray, o, intersectionPoint, normal, Scene::getInstance()->getLights());
+}
+
+#define MAX_DEPTH 2
+#define NB_DIR 10
+
+Vec3Df RayTracer::pathTracer(const Vec3Df &camPos, const Vec3Df &dir) const {
+  Triangle intersectionTriangle;
+  Vec3Df intersectionPoint;
+  const Object * objectIntersected = NULL;
+  
+  objectIntersected = getObjectIntersected(camPos, dir, intersectionPoint, intersectionTriangle);
+  
+  if(objectIntersected != NULL){
+    Ray ray (camPos-objectIntersected->getTrans (), dir);
+    Vec3Df normal = getNormalAtIntersection(*objectIntersected, intersectionPoint, intersectionTriangle);
+    
+    Vertex  intP(intersectionPoint, normal);
+    return pathTracerRec(ray, *objectIntersected, intP, 0);
+  }
+  return Vec3Df(0.f, 0.f, 0.f);
+}
+  
+Vec3Df RayTracer::pathTracerRec(const Ray & ray, const Object & intersectedObject, const Vertex & intP, unsigned int depth) const{ 
+  Vec3Df color;
+  std::vector<Light> pathTracingLights;
+  float a = 1.0;
+  float b=0.0;
+  float c=0.5;
+  float intensity;
+  float distance;
+  if(depth == MAX_DEPTH){
+    color =  getPhongBRDF(ray, intersectedObject, intP.getPos(), intP.getNormal());
+    color /= (pow(2, depth));
+    return color;
+  }
+
+  std::vector<Vec3Df> direction = getRandomDirections(intP, M_PI/2);
+  Vec3Df pos = intP.getPos() + intersectedObject.getTrans();
+  
+  for(unsigned int i = 0; i<direction.size(); i++){
+        const Object * intObject = NULL;
+        Vec3Df intersectionPoint;
+        Vec3Df lightColor;
+        Vec3Df intPos;
+	Triangle intersectionTriangle;
+
+	intObject = getObjectIntersected(pos,direction[i],intersectionPoint,intersectionTriangle);
+	
+	if(intObject != NULL){
+	  Ray newRay(pos, direction[i]);
+	  Vec3Df normal = getNormalAtIntersection(*intObject,intersectionPoint,intersectionTriangle);
+	  Vertex newIntVertex(intersectionPoint, normal);
+	  lightColor = this->pathTracerRec(newRay, *intObject, newIntVertex, depth+1);
+	  intPos = newIntVertex.getPos() + intObject->getTrans();
+
+	  distance = Vec3Df::distance(intP.getPos(), intersectionPoint); 
+	  intensity = 1/(a+b*distance+c*pow(distance,2));
+	  pathTracingLights.push_back(Light(intPos, Vec3Df(1.0,1.0,1.0), intensity)); // !! Uses white lights
+	}
+	 
+
+  }
+  
+  color = getPhongBRDFWithLights(ray, intersectedObject, intP.getPos(), intP.getNormal(), pathTracingLights)/pathTracingLights.size();
+  color /= (pow(2, depth));;
+
+  return color;
+}
+
+std::vector<Vec3Df> RayTracer::getRandomDirections(const Vertex & v, const float angle) const{
+
+  std::vector<Vec3Df> directions;
+  Vec3Df normal = v.getNormal();
+  Vec3Df secondVec(-normal[1],normal[0],0.0); // compute second perpendicular vector
+  Vec3Df thirdVec = Vec3Df::crossProduct(normal, secondVec);
+  secondVec.normalize();
+  thirdVec.normalize();
+
+  for (unsigned int i=0; i<NB_DIR; i++) {
+    Ray *ray = Ray::getRandomRay(v.getPos(), normal, secondVec, thirdVec, angle);
+    directions.push_back(ray->getDirection());
+  }
+  
+  return directions;
+}
+
 
 Vec3Df RayTracer::getPhongBRDFReflectance(const Ray &ray, const Object &o, const Vec3Df &intersectionPoint,
 					  const Vec3Df &normal) const{

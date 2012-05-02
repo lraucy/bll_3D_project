@@ -63,8 +63,14 @@ Window::Window () : QMainWindow (NULL) {
 Window::~Window () {
 
 }
+void Window::rayTraceImage () {
+  renderRayImage (RAYTRACER_RAYTRACING_MODE);
+}
+void Window::pathTraceImage () {
+  renderRayImage (RAYTRACER_PATHTRACING_MODE);
+}
 
-void Window::renderRayImage () {
+void Window::renderRayImage (unsigned int mode) {
     qglviewer::Camera * cam = viewer->camera ();
     RayTracer * rayTracer = RayTracer::getInstance ();
     qglviewer::Vec p = cam->position ();
@@ -82,7 +88,7 @@ void Window::renderRayImage () {
     QTime timer;
     timer.start ();
     viewer->setRayImage(rayTracer->render (camPos, viewDirection, upVector, rightVector,
-                        fieldOfView, aspectRatio, screenWidth, screenHeight));
+					   fieldOfView, aspectRatio, screenWidth, screenHeight, mode));
     statusBar()->showMessage(QString ("Raytracing performed in ") +
                              QString::number (timer.elapsed ()) +
                              QString ("ms at ") +
@@ -245,7 +251,12 @@ void Window::initControlWidget () {
     QVBoxLayout * rayLayout = new QVBoxLayout (rayGroupBox);
     QPushButton * rayButton = new QPushButton ("Render", rayGroupBox);
     rayLayout->addWidget (rayButton);
-    connect (rayButton, SIGNAL (clicked ()), this, SLOT (renderRayImage ()));
+    connect (rayButton, SIGNAL (clicked ()), this, SLOT (rayTraceImage ()));
+    
+    QPushButton * pathTraceButton = new QPushButton ("Render with path tracing", rayGroupBox);
+    rayLayout->addWidget (pathTraceButton);
+    connect (pathTraceButton, SIGNAL (clicked ()), this, SLOT (pathTraceImage ()));
+ 
     QPushButton * showButton = new QPushButton ("Show", rayGroupBox);
     rayLayout->addWidget (showButton);
     connect (showButton, SIGNAL (clicked ()), this, SLOT (showRayImage ()));

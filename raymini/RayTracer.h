@@ -15,6 +15,7 @@
 #include "Vec3D.h"
 #include "Ray.h"
 #include "Object.h"
+#include "Light.h"
 
 #define RAYTRACER_NO_SHADOW 0
 #define RAYTRACER_HARD_SHADOW 1
@@ -23,6 +24,9 @@
 #define RAYTRACER_NO_AA 0
 #define RAYTRACER_AAx2 1
 #define RAYTRACER_AAx3 2
+
+#define RAYTRACER_RAYTRACING_MODE 0
+#define RAYTRACER_PATHTRACING_MODE 1
 
 
 
@@ -59,7 +63,8 @@ public:
                    float fieldOfView,
                    float aspectRatio,
                    unsigned int screenWidth,
-                   unsigned int screenHeight);
+                   unsigned int screenHeight,
+				   unsigned int mode);
     
 protected:
     inline RayTracer () { aoNbRay = 10; aoSphereRadius = 5; aoConeAngle = 70; aoCoeff = 0.2;
@@ -73,6 +78,9 @@ protected:
 
 	Vec3Df getPhongBRDF(const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
+
+	Vec3Df getPhongBRDFWithLights(const Ray &ray, const Object &o,
+								  const Vec3Df &intersectionPoint, const Vec3Df &normal, const std::vector<Light> lights) const;
 
 	Vec3Df getPhongBRDFReflectance(const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
@@ -93,7 +101,11 @@ protected:
 	float ambientOcclusion(const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
 	float computeAmbientOcclusion(const Vec3Df &intersectionPoint,
 		const Vec3Df &normal, unsigned int nbRay, float R, float coneAngle) const;
-      
+
+  Vec3Df pathTracer(const Vec3Df &camPos, const Vec3Df &dir) const ;
+  Vec3Df pathTracerRec(const Ray & ray, const Object & intersectedObject, const Vertex & intP, unsigned int depth) const;
+  std::vector<Vec3Df> getRandomDirections(const Vertex & v, const float angle) const;
+  
 private:
     Vec3Df backgroundColor;
 	unsigned int screenWidth;
