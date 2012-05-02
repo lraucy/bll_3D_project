@@ -70,11 +70,11 @@ void Scene::buildDefaultScene () {
     Object garg (gargMesh, gargMat, "gargoyle");
     garg.setTrans (Vec3Df (-2.f, 0.0f, 0.f));
     objects.push_back (garg);
-	for (unsigned int i = 0; i < objects.size(); i++)
-		objects[i].getMesh().buildKdTree();
+    for (unsigned int i = 0; i < objects.size(); i++)
+      objects[i].getMesh().buildKdTree();
 
-    Light l1 (Vec3Df (0.0f, -5.0f, 3.0f), Vec3Df (1.0f, .0f, 1.0f), 12.0f, 1.0f, Vec3Df(0.0f, 5.0f, -3.0f));
+    Light l1 (Vec3Df (0.0f, -5.0f, 3.0f), Vec3Df (1.0f, .0f, 1.0f), 1.0f, 1.0f, Vec3Df(0.0f, 5.0f, -3.0f), QString("Light 1"));
     lights.push_back (l1);
-    Light l2 (Vec3Df (0.0f, 5.0f, 5.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 1.0f, Vec3Df(0.0f, -5.0f, -5.0f));
+    Light l2 (Vec3Df (0.0f, 5.0f, 5.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 1.0f, Vec3Df(0.0f, -5.0f, -5.0f), QString("Light 2"));
     lights.push_back (l2);
 }

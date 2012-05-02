@@ -16,7 +16,8 @@ HEADERS = Window.h \
           RayTracer.h \
           Ray.h \
 		  KdTreeElement.h \
-		  MaterialQObject.h
+		  MaterialQObject.h \
+		  LightQObject.h
 
 SOURCES = Window.cpp \
           GLViewer.cpp \
@@ -33,6 +34,7 @@ SOURCES = Window.cpp \
           Ray.cpp \
 		  KdTreeElement.cpp \
 		  MaterialQObject.cpp \
+                  LightQObject.cpp \
           Main.cpp
           
     DESTDIR=.

@@ -36,6 +36,7 @@
 
 #include "RayTracer.h"
 #include "MaterialQObject.h"
+#include "LightQObject.h"
 
 using namespace std;
 
@@ -324,16 +325,25 @@ void Window::initControlWidget () {
 
     layout->addWidget (aoGroupBox);
 
+    Scene *scene = Scene::getInstance();
+
 	// Objects properties
     QGroupBox * objectsGroupBox = new QGroupBox ("Objects Properties", controlWidget);
 	QVBoxLayout * objectsLayout = new QVBoxLayout(objectsGroupBox);
-
-	Scene *scene = Scene::getInstance();
 
 	for (unsigned int i = 0; i < scene->getObjects().size(); i++)
 		objectsLayout->addWidget(getWidgetObject(scene->getObjects()[i], objectsGroupBox));
 
 	layout->addWidget(objectsGroupBox);
+
+	// Lights properties
+    QGroupBox * lightsGroupBox = new QGroupBox ("Lights Properties", controlWidget);
+	QVBoxLayout * lightsLayout = new QVBoxLayout(lightsGroupBox);
+
+	for (unsigned int i = 0; i < scene->getLights().size(); i++)
+		lightsLayout->addWidget(getWidgetLight(scene->getLights()[i], lightsGroupBox));
+
+	layout->addWidget(lightsGroupBox);
 
     
     QGroupBox * globalGroupBox = new QGroupBox ("Global Settings", controlWidget);
@@ -374,5 +384,55 @@ QGroupBox * Window::getWidgetObject (Object &o, QWidget *parent) {
 
 	objectLayout->addWidget(mirrorSpinBox);
 	return objectGroupBox;
+
+}
+
+QGroupBox * Window::getWidgetLight (Light &l, QWidget *parent) {
+	QGroupBox *lightGroupBox = new QGroupBox(l.getName(), parent);
+	QVBoxLayout *lightLayout = new QVBoxLayout(lightGroupBox);
+
+	// Intensity
+	lightLayout->addWidget(new QLabel("Intensity:"));
+
+	QDoubleSpinBox *mirrorSpinBox = new QDoubleSpinBox();
+	mirrorSpinBox->setValue(l.getIntensity());
+	mirrorSpinBox->setRange(0.0, 20.0);
+	mirrorSpinBox->setSingleStep(0.05);
+	
+	connect(mirrorSpinBox, SIGNAL(valueChanged(double)), new LightQObject(&l),
+			SLOT(setIntensity(double)));
+	
+	lightLayout->addWidget(mirrorSpinBox);
+
+	// Color
+	lightLayout->addWidget(new QLabel("Color (RGB values):"));
+
+	QDoubleSpinBox *redMirrorSpinBox = new QDoubleSpinBox();
+	QDoubleSpinBox *greenMirrorSpinBox = new QDoubleSpinBox();
+	QDoubleSpinBox *blueMirrorSpinBox = new QDoubleSpinBox();
+	redMirrorSpinBox->setValue(l.getColor()[0]);
+	redMirrorSpinBox->setRange(0.0, 1.0);
+	redMirrorSpinBox->setSingleStep(0.05);
+	
+	greenMirrorSpinBox->setValue(l.getColor()[1]);
+	greenMirrorSpinBox->setRange(0.0, 1.0);
+	greenMirrorSpinBox->setSingleStep(0.05);
+	
+	blueMirrorSpinBox->setValue(l.getColor()[2]);
+	blueMirrorSpinBox->setRange(0.0, 1.0);
+	blueMirrorSpinBox->setSingleStep(0.05);
+	
+	connect(redMirrorSpinBox, SIGNAL(valueChanged(double)), new LightQObject(&l),
+			SLOT(setRed(double)));
+	connect(greenMirrorSpinBox, SIGNAL(valueChanged(double)), new LightQObject(&l),
+			SLOT(setGreen(double)));
+	connect(blueMirrorSpinBox, SIGNAL(valueChanged(double)), new LightQObject(&l),
+			SLOT(setBlue(double)));
+	
+	lightLayout->addWidget(redMirrorSpinBox);
+	lightLayout->addWidget(greenMirrorSpinBox);
+	lightLayout->addWidget(blueMirrorSpinBox);
+	
+	return lightGroupBox;
 
 }
