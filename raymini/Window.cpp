@@ -213,6 +213,13 @@ void Window::resetPathTracingLoic() {
   rayTracerInstance->resetPathTracingLoic();
 }
 
+void Window::setMaxDepth(int depth) {
+	KdTreeElement::setMaxDepth(depth);
+}
+void Window::setTrianglePerLeaf(int triangleNb) {
+	KdTreeElement::setTrianglePerLeaf(triangleNb);
+}
+
 
 int Window::getPathTraceNumberRay() {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
@@ -275,6 +282,11 @@ double Window::getAOCoeff() {
 void Window::setAOCoeff(double coeff) {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
     rayTracerInstance->setAOCoeff(coeff);
+}
+
+void Window::rebuildKdTree() {
+	Scene * scene = Scene::getInstance();
+	scene->rebuildKdTree();
 }
 
 void Window::initControlWidget () {
@@ -356,6 +368,33 @@ void Window::initControlWidget () {
     layout->addWidget (rayGroupBox);
 
 
+	// KdTreeOption
+	//
+    QGroupBox * kdGroupBox = new QGroupBox ("KdTree", controlWidget);
+    QVBoxLayout * kdLayout = new QVBoxLayout (kdGroupBox);
+
+	kdLayout->addWidget(new QLabel("Depth"));
+	QSpinBox *kdDepth = new QSpinBox();
+	kdDepth->setValue(KdTreeElement::maxDepth);
+	kdDepth->setRange(0, 100000);
+	connect(kdDepth, SIGNAL(valueChanged(int)), this, SLOT (setMaxDepth(int)));
+	kdLayout->addWidget(kdDepth);
+
+	kdLayout->addWidget(new QLabel("Triangle nb"));
+	QSpinBox *kdTriangle = new QSpinBox();
+	kdTriangle->setValue(KdTreeElement::trianglePerLeaf);
+	kdTriangle->setRange(0, 100000);
+	connect(kdTriangle, SIGNAL(valueChanged(int)), this, SLOT (setTrianglePerLeaf(int)));
+	kdLayout->addWidget(kdTriangle);
+
+    QPushButton * rebuildKdButton = new QPushButton ("rebuild Kd", kdGroupBox);
+    kdLayout->addWidget (rebuildKdButton);
+    connect (rebuildKdButton, SIGNAL (clicked ()), this, SLOT (rebuildKdTree ()));
+
+    layout->addWidget (kdGroupBox);
+    
+
+
     // Path tracing options
     QGroupBox * ptGroupBox = new QGroupBox ("Path tracing", controlWidget);
     QVBoxLayout * ptLayout = new QVBoxLayout (ptGroupBox);
@@ -416,7 +455,7 @@ void Window::initControlWidget () {
 
     layout->addWidget (ptLoicGroupBox);
 
-    
+
 
     // Ambient Occlusion Options
     QGroupBox * aoGroupBox = new QGroupBox ("Ambient Occlusion", controlWidget);

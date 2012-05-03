@@ -32,6 +32,15 @@ Scene::Scene () {
 Scene::~Scene () {
 }
 
+
+void Scene::rebuildKdTree() {
+	for (unsigned int i = 0; i < objects.size(); i++) {
+		delete objects[i].getMesh().kdTree;
+		objects[i].getMesh().buildKdTree();
+	}
+	
+}
+
 void Scene::updateBoundingBox () {
   if (objects.empty ())
     bbox = BoundingBox ();

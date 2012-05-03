@@ -154,7 +154,7 @@ float Mesh::getMedian(unsigned int axe, const BoundingBox &bb) const {
 
 
 void Mesh::buildKdTree() {
-	this->kdTree = KdTreeElement::getKdTreeElement(*this, this->triangles);
+	this->kdTree = KdTreeElement::getKdTreeElement(*this, this->triangles, 0);
 }
 
 inline void glVertexVec3Df (const Vec3Df & v) {
