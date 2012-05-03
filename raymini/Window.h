@@ -42,6 +42,11 @@ public slots :
   int getShadowNumberRay();
   void setShadowRadius(double shadowRadius);
   double getShadowRadius();
+  int getPathTraceDepthLoic();
+  void setPathTraceDepthLoic(int pathTraceDepth);
+  int getIterationPerTracingLoic();
+  void setIterationPerTracingLoic(int iteration);
+  void resetPathTracingLoic();
   void setAOOption(bool option);
   void setAONumberRay(int nbRay);
   int getAONumberRay();
@@ -53,6 +58,7 @@ public slots :
   double getAOCoeff();
   void rayTraceImage () ;
   void pathTraceImage () ;
+  void pathTraceImageLoic () ;
   int getPathTraceNumberRay() ;
   void setPathTraceNumberRay(int NbRay) ;
   double getPathTraceDepth() ;

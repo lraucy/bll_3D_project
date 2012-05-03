@@ -49,21 +49,25 @@ float RayTracer::getShadowRadius() {
 // POINT D'ENTREE DU PROJET.
 // Le code suivant ray trace uniquement la boite englobante de la scene.
 // Il faut remplacer ce code par une veritable raytracer
-QImage RayTracer::render (const Vec3Df & camPos,
+QImage RayTracer::render (const QImage &image_,
+		const Vec3Df & camPos,
 		const Vec3Df & direction,
 		const Vec3Df & upVector,
 		const Vec3Df & rightVector,
 		float fieldOfView,
 		float aspectRatio,
 		unsigned int screenWidth,
-		unsigned int screenHeight, 
-		unsigned int mode) {
+		unsigned int screenHeight) {
 
 	this->screenWidth = screenWidth;
 	this->screenHeight = screenHeight;
 	this->upVector = upVector;
 	this->rightVector = rightVector;
-	QImage image (QSize (screenWidth, screenHeight), QImage::Format_RGB888);
+	QImage image;
+	if(iterationPathTracingLoic == 0)
+		image = QImage(QSize (screenWidth, screenHeight), QImage::Format_RGB888);
+	else
+		image = QImage(image_);
 	QProgressDialog progressDialog ("Raytracing...", "Cancel", 0, 100);
 	progressDialog.show ();
 	for (unsigned int i = 0; i < screenWidth; i++) {
@@ -78,21 +82,20 @@ QImage RayTracer::render (const Vec3Df & camPos,
 			Vec3Df intersectionPoint;
 			dir.normalize ();
 
-			Vec3Df c;
-			switch(mode) {
-			case RAYTRACER_RAYTRACING_MODE:
-			  c = getColor(camPos, dir);
-			  break;
-			case RAYTRACER_PATHTRACING_MODE:
-			  c = pathTracer(camPos, dir);
-			  break;
-			default:
-			  c = getColor(camPos, dir);
-			  break;
+			Vec3Df c = getColor(camPos, dir);
+
+			if(tracing == PATH_TRACING_LOIC) {
+				Vec3Df old_color(0,0,0);
+				if(iterationPathTracingLoic != 0)
+					old_color = Vec3Df(qRed(image.pixel(i,j)), qGreen(image.pixel(i,j)), qBlue(image.pixel(i,j)));
+				c = (old_color*sqrt(iterationPathTracingLoic) + c)/sqrt(iterationPathTracingLoic+iterationPerTracingLoic);
 			}
+
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
 	}
+	if(tracing == PATH_TRACING_LOIC)
+		iterationPathTracingLoic += iterationPerTracingLoic;
 	progressDialog.setValue (100);
 	return image;
 }
@@ -265,9 +268,29 @@ Vec3Df RayTracer::getPhongBRDFReflectance(const Ray &ray, const Object &o, const
     return Vec3Df(0.0f, 0.0f, 0.0f);
 }
 
-
-
 Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const {
+	switch(tracing) {
+		case RAY_TRACING:
+			return getColorFromRayWithRayTracing(camPos, dir);
+			break;
+		case PATH_TRACING:
+			return pathTracer(camPos, dir);
+			break;
+		case PATH_TRACING_LOIC:
+			Ray ray(camPos, dir);
+			Vec3Df color(0.0,0.0,0.0);
+			for (unsigned int i = 0; i < iterationPerTracingLoic; i++)
+				color += tracePathLoic(ray, 0);
+			return color;
+			break;
+	}
+	return getColorFromRayWithRayTracing(camPos, dir);
+}
+
+
+
+
+Vec3Df RayTracer::getColorFromRayWithRayTracing(const Vec3Df &camPos, const Vec3Df &dir) const {
 	Vec3Df c (backgroundColor);
 	
 	Triangle intersectionTriangle;
@@ -440,3 +463,49 @@ float RayTracer::computeAmbientOcclusion(const Vec3Df &intersectionPoint,
 	return occlusionValue / nbRay;
 }
 
+
+Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
+	if (depth == pathTraceDepthLoic)
+		return Vec3Df(0.0, 0.0, 0.0);
+
+	Vec3Df intersectionPoint;
+	Triangle intersectionTriangle;
+	const Object *o = getObjectIntersected(ray.getOrigin(), ray.getDirection(), intersectionPoint, intersectionTriangle);
+	if (o != NULL) {
+		if(rand() < RAND_MAX/2) {
+			return o->getMaterial().getEmitance();
+		}
+
+		Vec3Df normal = getNormalAtIntersection(*o, intersectionPoint, intersectionTriangle);
+		Vec3Df intersectionPointGlobalMark = intersectionPoint + o->getTrans();
+		Ray * newRay = getRandomRay(intersectionPointGlobalMark, normal);
+
+		Vec3Df colorReflected = tracePathLoic(*newRay, depth+1);
+		float cosOmega = std::max(Vec3Df::dotProduct(newRay->getDirection(), normal), 0.0f);
+
+		Vec3Df color = cosOmega * getPhongBRDF(-ray.getDirection(), newRay->getDirection(), normal, o->getMaterial()) * colorReflected;
+		delete newRay;
+		return color;
+	}
+	else
+		return Vec3Df(0.0f, 0.0f, 0.0f);
+}
+
+Ray * RayTracer::getRandomRay(const Vec3Df &origin, const Vec3Df &normal) const {
+	Vec3Df secondVec;
+	Vec3Df thirdVec;
+
+	if (normal[0] == 0.0) {
+		secondVec[0] = 0.0f;
+		secondVec[1] = - normal[2];
+		secondVec[2] = normal[1];
+	}
+	else {
+		secondVec[0] = - normal[1];
+		secondVec[1] = normal[0];
+		secondVec[2] = 0.0f;
+	}
+	thirdVec = Vec3Df::crossProduct(normal, secondVec);
+
+	return Ray::getRandomRay(origin, normal, secondVec, thirdVec, 90.0);
+}

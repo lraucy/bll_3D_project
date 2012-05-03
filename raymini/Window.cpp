@@ -64,10 +64,14 @@ Window::~Window () {
 
 }
 void Window::rayTraceImage () {
-  renderRayImage (RAYTRACER_RAYTRACING_MODE);
+  renderRayImage (RAY_TRACING);
 }
 void Window::pathTraceImage () {
-  renderRayImage (RAYTRACER_PATHTRACING_MODE);
+  renderRayImage (PATH_TRACING);
+}
+
+void Window::pathTraceImageLoic () {
+  renderRayImage (PATH_TRACING_LOIC);
 }
 
 void Window::renderRayImage (unsigned int mode) {
@@ -87,8 +91,9 @@ void Window::renderRayImage (unsigned int mode) {
     unsigned int screenHeight = cam->screenHeight ();
     QTime timer;
     timer.start ();
-    viewer->setRayImage(rayTracer->render (camPos, viewDirection, upVector, rightVector,
-					   fieldOfView, aspectRatio, screenWidth, screenHeight, mode));
+	rayTracer->setTracing(mode);
+    viewer->setRayImage(rayTracer->render (viewer->getRayImage(), camPos, viewDirection, upVector, rightVector,
+					   fieldOfView, aspectRatio, screenWidth, screenHeight));
     statusBar()->showMessage(QString ("Raytracing performed in ") +
                              QString::number (timer.elapsed ()) +
                              QString ("ms at ") +
@@ -182,6 +187,32 @@ void Window::setShadowRadius(double shadowRadius) {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
     rayTracerInstance->setShadowRadius(shadowRadius);
 }
+
+int Window::getPathTraceDepthLoic() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  return rayTracerInstance->getPathTraceDepthLoic();
+}
+
+void Window::setPathTraceDepthLoic(int pathTraceDepth) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  rayTracerInstance->setPathTraceDepthLoic(pathTraceDepth);
+}
+
+int Window::getIterationPerTracingLoic() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  return rayTracerInstance->getIterationPerTracingLoic();
+}
+
+void Window::setIterationPerTracingLoic(int iteration) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  rayTracerInstance->setIterationPerTracingLoic(iteration);
+}
+
+void Window::resetPathTracingLoic() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  rayTracerInstance->resetPathTracingLoic();
+}
+
 
 int Window::getPathTraceNumberRay() {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
@@ -324,6 +355,7 @@ void Window::initControlWidget () {
     
     layout->addWidget (rayGroupBox);
 
+
     // Path tracing options
     QGroupBox * ptGroupBox = new QGroupBox ("Path tracing", controlWidget);
     QVBoxLayout * ptLayout = new QVBoxLayout (ptGroupBox);
@@ -351,6 +383,39 @@ void Window::initControlWidget () {
     ptLayout->addWidget(pathTraceDepth);
     
     layout->addWidget (ptGroupBox);
+
+  
+	// Loic Path tracing options
+
+    QGroupBox * ptLoicGroupBox = new QGroupBox ("Loic's Path tracing", controlWidget);
+    QVBoxLayout * ptLoicLayout = new QVBoxLayout (ptLoicGroupBox);
+
+    QPushButton * pathLoicButton = new QPushButton ("PT Render", ptLoicGroupBox);
+    ptLoicLayout->addWidget (pathLoicButton);
+    connect (pathLoicButton, SIGNAL (clicked ()), this, SLOT (pathTraceImageLoic ()));
+
+    QPushButton * pathLoicResetButton = new QPushButton ("Reset path tracing", ptLoicGroupBox);
+    ptLoicLayout->addWidget (pathLoicResetButton);
+    connect (pathLoicResetButton, SIGNAL (clicked ()), this, SLOT (resetPathTracingLoic ()));
+
+    ptLoicLayout->addWidget(new QLabel("Iteration:"));
+    QSpinBox *pathLoicTraceIteration = new QSpinBox();
+    pathLoicTraceIteration->setValue(getIterationPerTracingLoic());
+    pathLoicTraceIteration->setRange(0, 1000000);
+    pathLoicTraceIteration->setSingleStep(1);
+    connect(pathLoicTraceIteration, SIGNAL(valueChanged(int)), this, SLOT (setIterationPerTracingLoic(int)));
+    ptLoicLayout->addWidget(pathLoicTraceIteration);
+
+    ptLoicLayout->addWidget(new QLabel("Depth:"));
+    QSpinBox *pathLoicTraceDepth = new QSpinBox();
+    pathLoicTraceDepth->setValue(getPathTraceDepthLoic());
+    pathLoicTraceDepth->setRange(0, 1000000);
+    pathLoicTraceDepth->setSingleStep(1);
+    connect(pathLoicTraceDepth, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceDepthLoic(int)));
+    ptLoicLayout->addWidget(pathLoicTraceDepth);
+
+    layout->addWidget (ptLoicGroupBox);
+
     
 
     // Ambient Occlusion Options
