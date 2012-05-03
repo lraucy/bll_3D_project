@@ -71,6 +71,9 @@ protected:
 	Vec3Df getNormalAtIntersection(const Object &o, const Vec3Df &intersectionPoint,
 										const Triangle &triangle) const;
 
+	Vec3Df getPhongBRDF(const Vec3Df &eyeVector, const Vec3Df &lightVector,
+			const Vec3Df &normal, const Material &material) const;
+
 	Vec3Df getPhongBRDF(const Ray &ray, const Object &o,
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
 

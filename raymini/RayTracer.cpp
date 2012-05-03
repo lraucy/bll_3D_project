@@ -120,35 +120,36 @@ Vec3Df RayTracer::getNormalAtIntersection(const Object &o, const Vec3Df &interse
 	return normal;
 }
 
+Vec3Df RayTracer::getPhongBRDF(const Vec3Df &eyeVector, const Vec3Df &lightVector, const Vec3Df &normal, const Material &material) const {
+	float shininess = 16.0f;
+
+	Vec3Df ref = 2*Vec3Df::dotProduct(normal, lightVector)*normal - lightVector;
+	ref.normalize();
+
+	float diffuseTerm = material.getDiffuse() * std::max(Vec3Df::dotProduct(lightVector, normal), 0.0f);
+	float specTerm = material.getSpecular() * pow(std::max(Vec3Df::dotProduct(ref, eyeVector), 0.0f), shininess);
+	return (diffuseTerm + specTerm) * material.getColor();
+
+}
+
 Vec3Df RayTracer::getPhongBRDF(const Ray &ray, const Object &o,	const Vec3Df &intersectionPoint,
 					const Vec3Df &normal) const{
 
 	Scene * scene = Scene::getInstance();
 
-	float diffuseRef = o.getMaterial().getDiffuse();
-	float specRef = o.getMaterial().getSpecular();
-	float shininess = 16.0f;
-	Vec3Df colorVect = o.getMaterial().getColor();
-
-	Vec3Df diffuseTerm = Vec3Df();
-	Vec3Df specTerm = Vec3Df();
-
+	Vec3Df color(0.0f, 0.0f, 0.0f);
 	for (unsigned int i = 0; i < scene->getLights().size(); i++) {
 	  Light l = scene->getLights()[i];
 		Vec3Df toLight = l.getPos() - intersectionPoint;
 		toLight.normalize();
 		Vec3Df r = (ray.getOrigin() - intersectionPoint);
 		r.normalize();
-		Vec3Df ref = 2*Vec3Df::dotProduct(normal, toLight)*normal - toLight;
-		ref.normalize();
 
-		diffuseTerm += l.getIntensity() * l.getColor() * std::max(Vec3Df::dotProduct(toLight, normal), 0.0f);
-		specTerm += l.getIntensity() * l.getColor() * pow(std::max(Vec3Df::dotProduct(ref, r), 0.0f), shininess);
+		color += l.getIntensity() * l.getColor() * getPhongBRDF(r, toLight, normal, o.getMaterial());
+
 	}
-
-	Vec3Df color = specRef * specTerm + diffuseRef*diffuseTerm;
 	color = color * 255;
-	return color * colorVect;
+	return color;
 }
 
 Vec3Df RayTracer::getPhongBRDFReflectance(const Ray &ray, const Object &o, const Vec3Df &intersectionPoint,
