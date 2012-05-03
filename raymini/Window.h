@@ -45,6 +45,8 @@ public slots :
   double getShadowRadius();
   int getPathTraceDepth();
   void setPathTraceDepth(int pathTraceDepth);
+  int getIterationPerTracing();
+  void setIterationPerTracing(int iteration);
   void resetPathTracing();
   void setAOOption(bool option);
   void setAONumberRay(int nbRay);

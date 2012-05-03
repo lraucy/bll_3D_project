@@ -58,6 +58,8 @@ public:
   inline unsigned int getPathTraceDepth() {return pathTraceDepth;}
   inline void setPathTraceDepth(unsigned int pathTraceDepth_) {pathTraceDepth = pathTraceDepth_;}
   inline void resetPathTracing() {iterationPathTracing = 0;}
+  inline unsigned int getIterationPerTracing() {return iterationPerTracing;}
+  inline void setIterationPerTracing(unsigned int iteration) {iterationPerTracing = iteration;}
 
   inline void setTracing(unsigned int tracing_) {tracing = tracing_;}
   
@@ -74,7 +76,7 @@ public:
 protected:
     inline RayTracer () { aoNbRay = 10; aoSphereRadius = 5; aoConeAngle = 70; aoCoeff = 0.2;
 							shadowNbRay = 10; aoOpt = false; iterationPathTracing = 0;
-							pathTraceDepth = 4;}
+							pathTraceDepth = 4; iterationPerTracing = 10;}
     inline virtual ~RayTracer () {}
 	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
@@ -133,6 +135,7 @@ private:
 
   unsigned int iterationPathTracing;
   unsigned int pathTraceDepth;
+  unsigned int iterationPerTracing;
 };
 
 

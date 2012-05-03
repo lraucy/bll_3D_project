@@ -83,16 +83,18 @@ QImage RayTracer::render (const QImage &image_,
 			dir.normalize ();
 
 			Vec3Df c = getColor(camPos, dir);
-			if(tracing == PATH_TRACING && iterationPathTracing != 0) {
-				Vec3Df old_color(qRed(image.pixel(i,j)), qGreen(image.pixel(i,j)), qBlue(image.pixel(i,j)));
-				c = (old_color*sqrt(iterationPathTracing) + c)/sqrt(iterationPathTracing+1);
+			if(tracing == PATH_TRACING) {
+				Vec3Df old_color(0,0,0);
+				if(iterationPathTracing != 0)
+					old_color = Vec3Df(qRed(image.pixel(i,j)), qGreen(image.pixel(i,j)), qBlue(image.pixel(i,j)));
+				c = (old_color*sqrt(iterationPathTracing) + c)/sqrt(iterationPathTracing+iterationPerTracing);
 			}
 			
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
 	}
 	if(tracing == PATH_TRACING)
-		iterationPathTracing++;
+		iterationPathTracing += iterationPerTracing;
 	progressDialog.setValue (100);
 	return image;
 }
@@ -186,7 +188,10 @@ Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const
 			break;
 		case PATH_TRACING:
 			Ray ray(camPos, dir);
-			return tracePath(ray, 0);
+			Vec3Df color(0.0,0.0,0.0);
+			for (unsigned int i = 0; i < iterationPerTracing; i++)
+				color += tracePath(ray, 0);
+			return color;
 			break;
 	}
 	return getColorFromRayWithRayTracing(camPos, dir);

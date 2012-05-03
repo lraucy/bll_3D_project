@@ -216,6 +216,16 @@ void Window::setPathTraceDepth(int pathTraceDepth) {
   rayTracerInstance->setPathTraceDepth(pathTraceDepth);
 }
 
+int Window::getIterationPerTracing() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  return rayTracerInstance->getIterationPerTracing();
+}
+
+void Window::setIterationPerTracing(int iteration) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  rayTracerInstance->setIterationPerTracing(iteration);
+}
+
 void Window::resetPathTracing() {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
   rayTracerInstance->resetPathTracing();
@@ -344,6 +354,14 @@ void Window::initControlWidget () {
     QPushButton * pathResetButton = new QPushButton ("Reset path tracing", ptGroupBox);
     ptLayout->addWidget (pathResetButton);
     connect (pathResetButton, SIGNAL (clicked ()), this, SLOT (resetPathTracing ()));
+
+    ptLayout->addWidget(new QLabel("Iteration:"));
+    QSpinBox *pathTraceIteration = new QSpinBox();
+    pathTraceIteration->setValue(getIterationPerTracing());
+    pathTraceIteration->setRange(0, 1000000);
+    pathTraceIteration->setSingleStep(1);
+    connect(pathTraceIteration, SIGNAL(valueChanged(int)), this, SLOT (setIterationPerTracing(int)));
+    ptLayout->addWidget(pathTraceIteration);
 
     ptLayout->addWidget(new QLabel("Depth:"));
     QSpinBox *pathTraceDepth = new QSpinBox();
