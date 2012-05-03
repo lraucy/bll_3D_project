@@ -100,7 +100,7 @@ QImage RayTracer::render (const QImage &image_,
 	return image;
 }
 
-const Object * RayTracer::getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
+const Object * RayTracer::getObjectIntersected(Ray &ray,
 							Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const{
 
 	Scene * scene = Scene::getInstance();
@@ -110,10 +110,12 @@ const Object * RayTracer::getObjectIntersected(const Vec3Df &camPos, const Vec3D
 
 	for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
 		const Object & o = scene->getObjects()[k];
-		Ray ray (camPos-o.getTrans (), dir);
+		ray.translate(-o.getTrans());
 
 		if(ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPoint, smallestIntersectionDistance, intersectionTriangle))
 			objectIntersected = &o;
+
+		ray.translate(o.getTrans());
 	}
 	return objectIntersected;
 }
@@ -177,7 +179,8 @@ Vec3Df RayTracer::pathTracer(const Vec3Df &camPos, const Vec3Df &dir) const {
   Vec3Df intersectionPoint;
   const Object * objectIntersected = NULL;
   
-  objectIntersected = getObjectIntersected(camPos, dir, intersectionPoint, intersectionTriangle);
+  Ray ray (camPos, dir);
+  objectIntersected = getObjectIntersected(ray, intersectionPoint, intersectionTriangle);
   
   if(objectIntersected != NULL){
     Ray ray (camPos-objectIntersected->getTrans (), dir);
@@ -213,7 +216,8 @@ Vec3Df RayTracer::pathTracerRec(const Ray & ray, const Object & intersectedObjec
         Vec3Df intPos;
 	Triangle intersectionTriangle;
 
-	intObject = getObjectIntersected(pos,direction[i],intersectionPoint,intersectionTriangle);
+	Ray rayInter (pos, direction[i]);
+	intObject = getObjectIntersected(rayInter,intersectionPoint,intersectionTriangle);
 	
 	if(intObject != NULL){
 	  Ray newRay(pos, direction[i]);
@@ -297,7 +301,8 @@ Vec3Df RayTracer::getColorFromRayWithRayTracing(const Vec3Df &camPos, const Vec3
 	Vec3Df intersectionPoint;
 	const Object * objectIntersected = NULL;
 
-	objectIntersected = getObjectIntersected(camPos, dir, intersectionPoint,
+	Ray ray (camPos, dir);
+	objectIntersected = getObjectIntersected(ray, intersectionPoint,
 			intersectionTriangle);
 	if(objectIntersected != NULL) {
 		Ray ray (camPos, dir);
@@ -470,23 +475,35 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 
 	Vec3Df intersectionPoint;
 	Triangle intersectionTriangle;
-	const Object *o = getObjectIntersected(ray.getOrigin(), ray.getDirection(), intersectionPoint, intersectionTriangle);
+	const Object *o = getObjectIntersected(ray, intersectionPoint, intersectionTriangle);
 	if (o != NULL) {
 		Vec3Df emitance = o->getMaterial().getEmitance();
 		if(emitance[0] != 0 || emitance[1] != 0 || emitance[2] != 0) {
 			return o->getMaterial().getEmitance();
 		}
+
+		Vec3Df normal = getNormalAtIntersection(*o, intersectionPoint, intersectionTriangle);
+		Vec3Df intersectionPointGlobalMark = intersectionPoint + o->getTrans();
+
 		if(o->getMaterial().isTransparent()) {
 			if((float)rand()/RAND_MAX < o->getMaterial().getProbaTransmission()) {
 				float epsilon = 0.01;
-				Ray newRay(intersectionPoint + o->getTrans() + epsilon * ray.getDirection(), ray.getDirection());
+
+				if (ray.reverseTriangleIntersected)
+					normal = -normal;
+
+				Vec3Df planVector = Vec3Df::crossProduct(normal, Vec3Df::crossProduct(-ray.getDirection(), normal));
+				float sinTheta1 = planVector.getLength();
+				float n = (ray.reverseTriangleIntersected) ? o->getMaterial().getRefractionIndex() : 1.0 / o->getMaterial().getRefractionIndex();
+				float sinTheta2 = n * sinTheta1;
+				Vec3Df newDir = sinTheta2 * (-planVector) + sqrt(1-sinTheta2*sinTheta2) * (-normal);
+
+				Ray newRay(intersectionPointGlobalMark + epsilon * newDir, newDir);
 				newRay.intersectReverseTriangles = true;
 				return tracePathLoic(newRay, depth);
 			}
 		}
 
-		Vec3Df normal = getNormalAtIntersection(*o, intersectionPoint, intersectionTriangle);
-		Vec3Df intersectionPointGlobalMark = intersectionPoint + o->getTrans();
 		Ray * newRay = getRandomRay(intersectionPointGlobalMark, normal);
 
 		Vec3Df colorReflected = tracePathLoic(*newRay, depth+1);

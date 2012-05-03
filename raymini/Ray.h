@@ -35,13 +35,15 @@ public:
 
     bool intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const;
     bool intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & intersectionPoint) const;
-	bool intersect (const Mesh & mesh, KdTreeElement *kdTree, Vec3Df & intersectionPoint, float &intersectionDistance, Triangle &triangle) const;
+    bool intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & intersectionPoint, bool &reverse) const;
+	bool intersect (const Mesh & mesh, KdTreeElement *kdTree, Vec3Df & intersectionPoint, float &intersectionDistance, Triangle &triangle);
 	bool intersect (const Mesh & mesh, KdTreeElement *kdTree) const;
 	bool intersectInSphere (const Mesh &mesh, KdTreeElement *kdTree,
 		const Vec3Df &originSphere, float R) const;
 
 	bool isASegment;
 	bool intersectReverseTriangles;
+	bool reverseTriangleIntersected;
     
 private:
     Vec3Df origin;

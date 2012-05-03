@@ -24,7 +24,8 @@ public:
 			const Vec3Df &emitance=Vec3Df(0,0,0),
 			bool isTransparent=false,
 			float probaTransmission=0.0f,
-			float probaReflection=1.0f)
+			float probaReflection=1.0f,
+			float refractionIndex=1.0f)
         : diffuse (diffuse),
 		specular (specular),
 		color (color),
@@ -32,7 +33,8 @@ public:
 		emitance(emitance),
 		transparent(isTransparent),
 		probaTransmission(probaTransmission),
-		probaReflection(probaReflection){}
+		probaReflection(probaReflection),
+		refractionIndex(refractionIndex){}
     virtual ~Material () {}
 
     inline float getDiffuse () const { return diffuse; }
@@ -43,6 +45,7 @@ public:
 	inline bool isTransparent() const { return transparent;}
 	inline float getProbaTransmission() const {return probaTransmission;}
 	inline float getProbaReflection() const {return probaReflection;}
+	inline float getRefractionIndex() const {return refractionIndex;}
 
     inline void setDiffuse (float d) { diffuse = d; }
     inline void setSpecular (float s) { specular = s; }
@@ -59,6 +62,7 @@ private:
 	bool transparent;
 	float probaTransmission;
 	float probaReflection;
+	float refractionIndex;
 
 	
 };

@@ -88,7 +88,7 @@ protected:
 	  shadowNbRay = 10; aoOpt = false; pathTraceNbRay = 5; pathTraceAngle = M_PI/2; pathTraceDepth = 2;
 	  iterationPathTracingLoic = 0; pathTraceDepthLoic = 4; iterationPerTracingLoic = 10;}
     inline virtual ~RayTracer () {}
-	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
+	const Object * getObjectIntersected(Ray &ray,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
 
 	Vec3Df getNormalAtIntersection(const Object &o, const Vec3Df &intersectionPoint,

@@ -112,7 +112,7 @@ void Scene::buildDefaultScene () {
     
   Mesh gargMesh;
   gargMesh.loadOFF ("models/gargoyle.off");
-  Material gargMat (0.7f, 0.4f, Vec3Df (0.5f, 0.8f, 0.5f), 0.0f, Vec3Df(0,0,0), true, 0.5f, 0.5f);
+  Material gargMat (0.7f, 0.4f, Vec3Df (0.5f, 0.8f, 0.5f), 0.0f, Vec3Df(0,0,0), true, 0.7f, 0.3f, 1.3f);
   Object garg (gargMesh, gargMat, QString("Gargoyle"));
   garg.setTrans (Vec3Df (-1.f, 1.0f, 0.1f));
   objects.push_back (garg);
