@@ -82,9 +82,8 @@ QImage RayTracer::render (const QImage &image_,
 			Vec3Df intersectionPoint;
 			dir.normalize ();
 
-			Ray eyeRay(camPos, dir);
-			Vec3Df c = tracePath(eyeRay, 0);
-			if(iterationPathTracing != 0) {
+			Vec3Df c = getColor(camPos, dir);
+			if(tracing == PATH_TRACING && iterationPathTracing != 0) {
 				Vec3Df old_color(qRed(image.pixel(i,j)), qGreen(image.pixel(i,j)), qBlue(image.pixel(i,j)));
 				c = (old_color*sqrt(iterationPathTracing) + c)/sqrt(iterationPathTracing+1);
 			}
@@ -92,7 +91,8 @@ QImage RayTracer::render (const QImage &image_,
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
 	}
-	iterationPathTracing++;
+	if(tracing == PATH_TRACING)
+		iterationPathTracing++;
 	progressDialog.setValue (100);
 	return image;
 }
@@ -180,6 +180,19 @@ Vec3Df RayTracer::getPhongBRDFReflectance(const Ray &ray, const Object &o, const
 
 
 Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const {
+	switch(tracing) {
+		case RAY_TRACING:
+			return getColorFromRayWithRayTracing(camPos, dir);
+			break;
+		case PATH_TRACING:
+			Ray ray(camPos, dir);
+			return tracePath(ray, 0);
+			break;
+	}
+	return getColorFromRayWithRayTracing(camPos, dir);
+}
+
+Vec3Df RayTracer::getColorFromRayWithRayTracing(const Vec3Df &camPos, const Vec3Df &dir) const {
 	Vec3Df c (backgroundColor);
 	
 	Triangle intersectionTriangle;

@@ -24,6 +24,9 @@
 #define RAYTRACER_AAx2 1
 #define RAYTRACER_AAx3 2
 
+#define RAY_TRACING 0
+#define PATH_TRACING 1
+
 
 
 class Scene;
@@ -55,6 +58,8 @@ public:
   inline unsigned int getPathTraceDepth() {return pathTraceDepth;}
   inline void setPathTraceDepth(unsigned int pathTraceDepth_) {pathTraceDepth = pathTraceDepth_;}
   inline void resetPathTracing() {iterationPathTracing = 0;}
+
+  inline void setTracing(unsigned int tracing_) {tracing = tracing_;}
   
     QImage render (const QImage &image_,
 				   const Vec3Df & camPos,
@@ -87,6 +92,7 @@ protected:
 						const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
 
 	Vec3Df getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const;
+	Vec3Df getColorFromRayWithRayTracing(const Vec3Df &camPos, const Vec3Df &dir) const;
   
 	Vec3Df getColor(const Vec3Df &camPos, const Vec3Df &dir) const;
 
@@ -122,6 +128,8 @@ private:
   unsigned int aoSphereRadius;
   unsigned int aoConeAngle;
   float aoCoeff;
+
+  unsigned int tracing;
 
   unsigned int iterationPathTracing;
   unsigned int pathTraceDepth;

@@ -64,6 +64,34 @@ Window::~Window () {
 
 }
 
+void Window::renderPathImage () {
+    qglviewer::Camera * cam = viewer->camera ();
+    RayTracer * rayTracer = RayTracer::getInstance ();
+    qglviewer::Vec p = cam->position ();
+    qglviewer::Vec d = cam->viewDirection ();
+    qglviewer::Vec u = cam->upVector ();
+    qglviewer::Vec r = cam->rightVector ();
+    Vec3Df camPos (p[0], p[1], p[2]);
+    Vec3Df viewDirection (d[0], d[1], d[2]);
+    Vec3Df upVector (u[0], u[1], u[2]);
+    Vec3Df rightVector (r[0], r[1], r[2]);
+    float fieldOfView = cam->fieldOfView ();
+    float aspectRatio = cam->aspectRatio ();
+    unsigned int screenWidth = cam->screenWidth ();
+    unsigned int screenHeight = cam->screenHeight ();
+    QTime timer;
+    timer.start ();
+	rayTracer->setTracing(PATH_TRACING);
+    viewer->setRayImage(rayTracer->render (viewer->getRayImage(), camPos, viewDirection, upVector, rightVector,
+                        fieldOfView, aspectRatio, screenWidth, screenHeight));
+    statusBar()->showMessage(QString ("Raytracing performed in ") +
+                             QString::number (timer.elapsed ()) +
+                             QString ("ms at ") +
+                             QString::number (screenWidth) + QString ("x") + QString::number (screenHeight) +
+                             QString (" screen resolution"));
+    viewer->setDisplayMode (GLViewer::RayDisplayMode);
+}
+
 void Window::renderRayImage () {
     qglviewer::Camera * cam = viewer->camera ();
     RayTracer * rayTracer = RayTracer::getInstance ();
@@ -81,6 +109,7 @@ void Window::renderRayImage () {
     unsigned int screenHeight = cam->screenHeight ();
     QTime timer;
     timer.start ();
+	rayTracer->setTracing(RAY_TRACING);
     viewer->setRayImage(rayTracer->render (viewer->getRayImage(), camPos, viewDirection, upVector, rightVector,
                         fieldOfView, aspectRatio, screenWidth, screenHeight));
     statusBar()->showMessage(QString ("Raytracing performed in ") +
@@ -307,6 +336,10 @@ void Window::initControlWidget () {
 
     QGroupBox * ptGroupBox = new QGroupBox ("Path tracing", controlWidget);
     QVBoxLayout * ptLayout = new QVBoxLayout (ptGroupBox);
+
+    QPushButton * pathButton = new QPushButton ("PT Render", ptGroupBox);
+    ptLayout->addWidget (pathButton);
+    connect (pathButton, SIGNAL (clicked ()), this, SLOT (renderPathImage ()));
 
     QPushButton * pathResetButton = new QPushButton ("Reset path tracing", ptGroupBox);
     ptLayout->addWidget (pathResetButton);

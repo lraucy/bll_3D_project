@@ -31,6 +31,7 @@ public:
     
 public slots :
     void renderRayImage ();
+    void renderPathImage ();
     void setBGColor ();
     void showRayImage ();
     void exportGLImage ();
