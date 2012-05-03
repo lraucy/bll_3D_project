@@ -472,8 +472,17 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 	Triangle intersectionTriangle;
 	const Object *o = getObjectIntersected(ray.getOrigin(), ray.getDirection(), intersectionPoint, intersectionTriangle);
 	if (o != NULL) {
-		if(rand() < RAND_MAX/2) {
+		Vec3Df emitance = o->getMaterial().getEmitance();
+		if(emitance[0] != 0 || emitance[1] != 0 || emitance[2] != 0) {
 			return o->getMaterial().getEmitance();
+		}
+		if(o->getMaterial().isTransparent()) {
+			if((float)rand()/RAND_MAX < o->getMaterial().getProbaTransmission()) {
+				float epsilon = 0.01;
+				Ray newRay(intersectionPoint + o->getTrans() + epsilon * ray.getDirection(), ray.getDirection());
+				newRay.intersectReverseTriangles = true;
+				return tracePathLoic(newRay, depth);
+			}
 		}
 
 		Vec3Df normal = getNormalAtIntersection(*o, intersectionPoint, intersectionTriangle);
@@ -486,6 +495,7 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 		Vec3Df color = cosOmega * getPhongBRDF(-ray.getDirection(), newRay->getDirection(), normal, o->getMaterial()) * colorReflected;
 		delete newRay;
 		return color;
+
 	}
 	else
 		return Vec3Df(0.0f, 0.0f, 0.0f);

@@ -63,7 +63,7 @@ void Scene::buildDefaultScene () {
 
   Mesh wallRightMesh;
   wallRightMesh.loadOFF ("models/WallRight.off");
-  Material wallRightMat(0.8f, 0.2f, Vec3Df(1.f, 0.f, 1.f), Vec3Df(255.0, 255.0, 255.0)) ;
+  Material wallRightMat(0.8f, 0.2f, Vec3Df(1.f, 0.f, 1.f), 0.0f, Vec3Df(255.0, 255.0, 255.0)) ;
   Object wallRight (wallRightMesh, wallRightMat, QString("Wall right"));    
   wallRight.setTrans(Vec3Df(2.f, -2.f, 0.f));
   objects.push_back (wallRight);
@@ -112,7 +112,7 @@ void Scene::buildDefaultScene () {
     
   Mesh gargMesh;
   gargMesh.loadOFF ("models/gargoyle.off");
-  Material gargMat (0.7f, 0.4f, Vec3Df (0.5f, 0.8f, 0.5f));
+  Material gargMat (0.7f, 0.4f, Vec3Df (0.5f, 0.8f, 0.5f), 0.0f, Vec3Df(0,0,0), true, 0.5f, 0.5f);
   Object garg (gargMesh, gargMat, QString("Gargoyle"));
   garg.setTrans (Vec3Df (-1.f, 1.0f, 0.1f));
   objects.push_back (garg);
