@@ -44,14 +44,23 @@ void Scene::updateBoundingBox () {
 
 // Changer ce code pour creer des scenes originales
 void Scene::buildDefaultScene () {
-  /*
+  
     Mesh sphereMesh;
-    sphereMesh.loadOFF("models/sphere.off");
-    Material sphereMat(0.7f, 0.4f, 0.0f, Vec3Df (0.5f, 0.8f, 0.5f));
+    sphereMesh.loadOFF("models/sphere2.off");
+    Material sphereMat(1.f, 0.f, Vec3Df (1.f, 1.f, 1.f));
     Object sphere(sphereMesh, sphereMat);
+    sphere.setTrans(Vec3Df(1.f, 1.f, 1.f));
     objects.push_back(sphere);
-  */
 
+  Mesh boundingBoxMesh;
+  boundingBoxMesh.loadOFF ("models/boundingBox.off");
+  Material boundingBoxMat(0.8f, 0.2f, Vec3Df(1.f, 1.f, 1.f)) ;
+  Object boundingBox (boundingBoxMesh, boundingBoxMat, QString("Box"));    
+  boundingBox.setTrans(Vec3Df(0.f, 0.f, 0.f));
+  objects.push_back (boundingBox);
+   
+  
+    /*
   
   Mesh wallLeftMesh;
   wallLeftMesh.loadOFF ("models/WallLeft.off");
@@ -89,20 +98,20 @@ void Scene::buildDefaultScene () {
   Object top (topMesh, topMat, QString("Wall top"));    
   top.setTrans(Vec3Df(0.f, 0.f, 5.f));
   objects.push_back (top);  
-  
+    */
   Mesh groundMesh;
   groundMesh.loadOFF ("models/ground.off");
   Material groundMat;
   Object ground (groundMesh, groundMat, QString("Ground"));    
   objects.push_back (ground);  
-    
+  /*
   Mesh ramMesh;
   ramMesh.loadOFF ("models/ram.off");
   Material ramMat (1.f, 1.f, Vec3Df (1.f, .6f, .2f));
   Object ram (ramMesh, ramMat, QString("Biquette"));
   ram.setTrans (Vec3Df (1.f, 0.5f, 0.f));
   objects.push_back (ram);
-    
+  */
   Mesh rhinoMesh;
   rhinoMesh.loadOFF ("models/rhino.off");
   Material rhinoMat (1.0f, 0.2f, Vec3Df (0.6f, 0.6f, 0.7f));
@@ -120,9 +129,9 @@ void Scene::buildDefaultScene () {
   for (unsigned int i = 0; i < objects.size(); i++)
     objects[i].getMesh().buildKdTree();
     
-  Light l (Vec3Df (0.0f, 0.0f, 4.9f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
+  Light l (Vec3Df (1.0f, 1.0f, 4.9f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 1.0f, Vec3Df(-1.f, -1.f, -4.9f), QString("Light 1"));
   lights.push_back (l);
-  Light l2 (Vec3Df (-3.0f, -3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
-	      //lights.push_back (l2);
+  Light l2 (Vec3Df (-1.0f, -1.0f, 4.9f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 1.0f, Vec3Df(1.f, 1.f, -4.9f), QString("Light 2"));
+  //  lights.push_back (l2);
 
 }
