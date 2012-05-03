@@ -378,9 +378,8 @@ Vec3Df RayTracer::tracePath(Ray &ray, unsigned int depth) const {
 	Triangle intersectionTriangle;
 	const Object *o = getObjectIntersected(ray.getOrigin(), ray.getDirection(), intersectionPoint, intersectionTriangle);
 	if (o != NULL) {
-		const Vec3Df &emitance = o->getMaterial().getEmitance();
-		if (emitance[0] != 0 || emitance[1] != 0 || emitance[2] != 0) {
-			return emitance;
+		if(rand() < RAND_MAX/2) {
+			return o->getMaterial().getEmitance();
 		}
 
 		Vec3Df normal = getNormalAtIntersection(*o, intersectionPoint, intersectionTriangle);
