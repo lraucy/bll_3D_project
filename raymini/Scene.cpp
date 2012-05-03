@@ -63,7 +63,7 @@ void Scene::buildDefaultScene () {
 
   Mesh wallRightMesh;
   wallRightMesh.loadOFF ("models/WallRight.off");
-  Material wallRightMat(0.8f, 0.2f, Vec3Df(1.f, 0.f, 1.f)) ;
+  Material wallRightMat(0.8f, 0.2f, Vec3Df(1.f, 0.f, 1.f), Vec3Df(255.0, 255.0, 255.0)) ;
   Object wallRight (wallRightMesh, wallRightMat, QString("Wall right"));    
   wallRight.setTrans(Vec3Df(2.f, -2.f, 0.f));
   objects.push_back (wallRight);
