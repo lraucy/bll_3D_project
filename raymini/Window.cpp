@@ -177,6 +177,21 @@ void Window::setShadowRadius(double shadowRadius) {
     rayTracerInstance->setShadowRadius(shadowRadius);
 }
 
+int Window::getPathTraceDepth() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  return rayTracerInstance->getPathTraceDepth();
+}
+
+void Window::setPathTraceDepth(int pathTraceDepth) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  rayTracerInstance->setPathTraceDepth(pathTraceDepth);
+}
+
+void Window::resetPathTracing() {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+  rayTracerInstance->resetPathTracing();
+}
+
 int Window::getAONumberRay() {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
     return rayTracerInstance->getAONbRay();
@@ -286,6 +301,26 @@ void Window::initControlWidget () {
 	rayLayout->addWidget(shadowRadius);
     
     layout->addWidget (rayGroupBox);
+
+  
+	// Path tracing options
+
+    QGroupBox * ptGroupBox = new QGroupBox ("Path tracing", controlWidget);
+    QVBoxLayout * ptLayout = new QVBoxLayout (ptGroupBox);
+
+    QPushButton * pathResetButton = new QPushButton ("Reset path tracing", ptGroupBox);
+    ptLayout->addWidget (pathResetButton);
+    connect (pathResetButton, SIGNAL (clicked ()), this, SLOT (resetPathTracing ()));
+
+    ptLayout->addWidget(new QLabel("Depth:"));
+    QSpinBox *pathTraceDepth = new QSpinBox();
+    pathTraceDepth->setValue(getPathTraceDepth());
+    pathTraceDepth->setRange(0, 1000000);
+    pathTraceDepth->setSingleStep(1);
+    connect(pathTraceDepth, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceDepth(int)));
+    ptLayout->addWidget(pathTraceDepth);
+
+    layout->addWidget (ptGroupBox);
 
     // Ambient Occlusion Options
     QGroupBox * aoGroupBox = new QGroupBox ("Ambient Occlusion", controlWidget);

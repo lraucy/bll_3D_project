@@ -42,6 +42,9 @@ public slots :
   int getShadowNumberRay();
   void setShadowRadius(double shadowRadius);
   double getShadowRadius();
+  int getPathTraceDepth();
+  void setPathTraceDepth(int pathTraceDepth);
+  void resetPathTracing();
   void setAOOption(bool option);
   void setAONumberRay(int nbRay);
   int getAONumberRay();

@@ -351,9 +351,9 @@ float RayTracer::computeAmbientOcclusion(const Vec3Df &intersectionPoint,
 	}
 	return occlusionValue / nbRay;
 }
-#define MAX_DEPTH_PATHTRACER 2
+
 Vec3Df RayTracer::tracePath(Ray &ray, unsigned int depth) const {
-	if (depth == MAX_DEPTH_PATHTRACER)
+	if (depth == pathTraceDepth)
 		return Vec3Df(0.0, 0.0, 0.0);
 
 	Vec3Df intersectionPoint;
