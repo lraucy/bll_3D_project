@@ -81,7 +81,7 @@ void Window::renderRayImage () {
     unsigned int screenHeight = cam->screenHeight ();
     QTime timer;
     timer.start ();
-    viewer->setRayImage(rayTracer->render (camPos, viewDirection, upVector, rightVector,
+    viewer->setRayImage(rayTracer->render (viewer->getRayImage(), camPos, viewDirection, upVector, rightVector,
                         fieldOfView, aspectRatio, screenWidth, screenHeight));
     statusBar()->showMessage(QString ("Raytracing performed in ") +
                              QString::number (timer.elapsed ()) +

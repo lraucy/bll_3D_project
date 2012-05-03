@@ -51,6 +51,40 @@ void Scene::buildDefaultScene () {
     Object ground (groundMesh, groundMat, "Ground");
     ground.setTrans(Vec3Df(0.f, 0.f, 0.f));
     objects.push_back (ground);
+	Mesh ceilingMesh;
+    ceilingMesh.loadOFF ("models/ceiling.off");
+    Material ceilingMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), 0.0f) ;
+    Object ceiling (ceilingMesh, ceilingMat, "Ground");
+    ceiling.setTrans(Vec3Df(0.f, 0.f, 4.f));
+    objects.push_back (ceiling);
+
+	Mesh wallRightMesh;
+    wallRightMesh.loadOFF ("models/WallRightLoic.off");
+    Material wallRightMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), Vec3Df(255.0,255.0, 255.0)) ;
+    Object wallRight (wallRightMesh, wallRightMat, "WallRight");
+    wallRight.setTrans(Vec3Df(2.f, 0.f, 2.f));
+    objects.push_back (wallRight);
+
+	Mesh wallLeftMesh;
+    wallLeftMesh.loadOFF ("models/WallLeftLoic.off");
+    Material wallLeftMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), 0.f) ;
+    Object wallLeft (wallLeftMesh, wallLeftMat, "WallLeft");
+    wallLeft.setTrans(Vec3Df(-2.f, 0.f, 2.f));
+    objects.push_back (wallLeft);
+
+	Mesh wallBackMesh;
+    wallBackMesh.loadOFF ("models/WallBackLoic.off");
+    Material wallBackMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), 0.f) ;
+    Object wallBack (wallBackMesh, wallBackMat, "WallBack");
+    wallBack.setTrans(Vec3Df(0.f, -2.f, 2.f));
+    objects.push_back (wallBack);
+
+	Mesh wallFrontMesh;
+    wallFrontMesh.loadOFF ("models/WallFrontLoic.off");
+    Material wallFrontMat(0.8f, 0.2f, Vec3Df(0.5f, 0.5f, 0.5f), 0.f) ;
+    Object wallFront (wallFrontMesh, wallFrontMat, "WallFront");
+    wallFront.setTrans(Vec3Df(0.f, 2.f, 2.f));
+    objects.push_back (wallFront);
 
     Mesh ramMesh;
     ramMesh.loadOFF ("models/ram.off");

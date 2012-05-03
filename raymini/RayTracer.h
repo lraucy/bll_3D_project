@@ -52,7 +52,8 @@ public:
   inline void setAOCoeff(float _aoCoeff) { aoCoeff = _aoCoeff;}
   inline float getAOCoeff() { return aoCoeff; }
   
-    QImage render (const Vec3Df & camPos,
+    QImage render (const QImage &image_,
+				   const Vec3Df & camPos,
                    const Vec3Df & viewDirection,
                    const Vec3Df & upVector,
                    const Vec3Df & rightVector,
@@ -63,7 +64,7 @@ public:
     
 protected:
     inline RayTracer () { aoNbRay = 10; aoSphereRadius = 5; aoConeAngle = 70; aoCoeff = 0.2;
-							shadowNbRay = 10; aoOpt = false;}
+							shadowNbRay = 10; aoOpt = false; iterationPathTracing = 0;}
     inline virtual ~RayTracer () {}
 	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
@@ -96,6 +97,9 @@ protected:
 	float ambientOcclusion(const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
 	float computeAmbientOcclusion(const Vec3Df &intersectionPoint,
 		const Vec3Df &normal, unsigned int nbRay, float R, float coneAngle) const;
+
+	Vec3Df tracePath(Ray &ray, unsigned int depth) const;
+	Ray * getRandomRay(const Vec3Df &origin, const Vec3Df &normal) const;
       
 private:
     Vec3Df backgroundColor;
@@ -113,6 +117,8 @@ private:
   unsigned int aoSphereRadius;
   unsigned int aoConeAngle;
   float aoCoeff;
+
+  unsigned int iterationPathTracing;
 };
 
 
