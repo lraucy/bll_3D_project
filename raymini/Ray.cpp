@@ -179,11 +179,13 @@ bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree) const {
 #define EPSILON_RAY 0.00001
 Ray * Ray::getRandomRay(const Vec3Df &origin, const Vec3Df &normal,
 			const Vec3Df &secondVec, const Vec3Df &thirdVec, float coneAngle) {
+	Vec3Df randVec;
+	do {
+		randVec = Vec3Df((float) rand()/(float)RAND_MAX * 2 - 1, (float) rand()/(float)RAND_MAX * 2 - 1, (float) rand()/(float)RAND_MAX);
+	} while (randVec.getSquaredLength() > 1
+			|| (coneAngle != 90.0 && (tanf(coneAngle*M_PI/180) < sqrt(randVec[0]*randVec[0] + randVec[1]*randVec[1])/randVec[2])) );
 
-	float angle1 = (float) rand()/(float)RAND_MAX * coneAngle;
-	float angle2 = (float) rand()/(float)RAND_MAX * 2 * M_PI;
-	Vec3Df dir = cosf(angle2) * secondVec + sinf(angle2) * thirdVec;
-	dir += ((float)1.0/tanf(angle1)) * normal;
+	Vec3Df dir = randVec[0] * secondVec + randVec[1] * thirdVec + randVec[2] * normal;
 	dir.normalize();
 	Ray *ray = new Ray(origin + EPSILON_RAY * dir, dir);
 	return ray;
