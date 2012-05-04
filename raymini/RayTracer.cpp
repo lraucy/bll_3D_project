@@ -300,6 +300,8 @@ Vec3Df RayTracer::getColorFromRayWithRayTracing(const Vec3Df &camPos, const Vec3
 	Triangle intersectionTriangle;
 	Vec3Df intersectionPoint;
 	const Object * objectIntersected = NULL;
+	std::vector<float> lightsIntensity;
+	std::vector<Light> lights = Scene::getInstance()->getLights();
 
 	Ray ray (camPos, dir);
 	objectIntersected = getObjectIntersected(ray, intersectionPoint,
@@ -309,13 +311,15 @@ Vec3Df RayTracer::getColorFromRayWithRayTracing(const Vec3Df &camPos, const Vec3
 		Vec3Df normal = getNormalAtIntersection(*objectIntersected, intersectionPoint,
 				intersectionTriangle);
 		Vec3Df intersectionPointGlobalMark = intersectionPoint + objectIntersected->getTrans();
-		c = getPhongBRDF(ray, *objectIntersected, intersectionPointGlobalMark, normal);
+		lightsIntensity = shadowRay(intersectionPointGlobalMark);
+
+		for (unsigned int i = 0; i < lights.size(); i++)
+			lights[i].setIntensity(lightsIntensity[i]*lights[i].getIntensity());
+		c = getPhongBRDFWithLights(ray, *objectIntersected, intersectionPointGlobalMark, normal, lights);
 		c += ambientOcclusion(intersectionPointGlobalMark, normal) * objectIntersected->getMaterial().getColor();
 
 		normal.normalize();
 		c += getPhongBRDFReflectance(ray, *objectIntersected, intersectionPointGlobalMark, normal);
-		float coef = shadowRay(intersectionPointGlobalMark);
-		c = c * Vec3Df(coef, coef, coef);
 	}
 	return c;
 }
@@ -366,13 +370,14 @@ Vec3Df RayTracer::getColor(const Vec3Df &camPos, const Vec3Df &dir) const {
   return getColorFromPixel(camPos, dir); 
 }
 
-float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
+std::vector<float> RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
   Scene * scene = Scene::getInstance();
   float epsilon = 0.001;
-  float intersectionShadow = 0.0;
+  std::vector<float> tab;
 
   for (unsigned int i = 0; i < scene->getLights().size(); i++)
   {
+	  tab.push_back(1.0);
 	  Vec3Df shadowRayDirection = scene->getLights()[i].getPos() - intersectionPoint;
 	  for (unsigned int k = 0; k < scene->getObjects().size(); k++) {
 		const Object &o = scene->getObjects()[k];
@@ -380,20 +385,21 @@ float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
 		ray.isASegment = true;
 		ray.intersectReverseTriangles = false;
 		if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
-			intersectionShadow += 1.0;
+			tab[i] = 0.0;
 	  }
 
   }
-  return 1.0 - intersectionShadow / scene->getLights().size();
+  return tab;
 }
 
-float RayTracer::softShadowRay(const Vec3Df &intersectionPoint, 
+std::vector<float> RayTracer::softShadowRay(const Vec3Df &intersectionPoint, 
 			       const unsigned int nbSamples) const{
   Scene * scene = Scene::getInstance();
   float epsilon = 0.001;
-  float counter = 0.0;
+  std::vector<float> tab;
   
   for (unsigned int i = 0; i < scene->getLights().size(); i++) {
+	  tab.push_back(1.0);
 	  for (unsigned int j = 0; j < nbSamples; j++) {
 		  Vec3Df shadowRayDirection = scene->getLights()[i].getRandomPoint() - intersectionPoint;
 		  for (unsigned int k = 0; k < scene->getObjects().size(); k++) {
@@ -402,26 +408,28 @@ float RayTracer::softShadowRay(const Vec3Df &intersectionPoint,
 			ray.isASegment = true;
 			ray.intersectReverseTriangles = true;
 			if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
-				counter += (1.0/nbSamples/scene->getLights().size());
+				tab[i] -= 1.0/nbSamples;
 		  }
 	  }
   }
-  return 1. - counter;
+  return tab;
 }
 
-float RayTracer::shadowRay(const Vec3Df &intersectionPoint) const{
+std::vector<float> RayTracer::shadowRay(const Vec3Df &intersectionPoint) const{
   switch(shadowOpt){
-  case RAYTRACER_NO_SHADOW: 
-    return 1.0;
-    break;
   case RAYTRACER_HARD_SHADOW:
     return hardShadowRay(intersectionPoint);
     break;
   case RAYTRACER_SOFT_SHADOW:
     return softShadowRay(intersectionPoint, shadowNbRay);
     break;
+  default: 
+	std::vector<float> tab;
+	for (unsigned int i = 0; i < Scene::getInstance()->getLights().size(); i++)
+		tab.push_back(1.0);
+    return tab;
+    break;
   }
-  return 1.0;
 }
 
 

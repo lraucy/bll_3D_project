@@ -136,9 +136,9 @@ void Scene::buildDefaultScene () {
   for (unsigned int i = 0; i < objects.size(); i++)
     objects[i].getMesh().buildKdTree();
     
-  Light l (Vec3Df (0.0f, 0.0f, 4.9f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
+  Light l (Vec3Df (0.0f, 0.0f, 4.9f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 0.5f, Vec3Df(0.0f, 0.0f, -1.0f));
   lights.push_back (l);
-  Light l2 (Vec3Df (-3.0f, -3.0f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
-	      //lights.push_back (l2);
+  Light l2 (Vec3Df (-1.8f, 1.8f, 3.0f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f,0.2f, Vec3Df(1.0f, -1.0f, -1.0f));
+	      lights.push_back (l2);
 
 }
