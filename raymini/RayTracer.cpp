@@ -494,7 +494,11 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 				float sinTheta1 = planVector.getLength();
 				float n = (ray.reverseTriangleIntersected) ? o->getMaterial().getRefractionIndex() : 1.0 / o->getMaterial().getRefractionIndex();
 				float sinTheta2 = n * sinTheta1;
-				Vec3Df newDir = sinTheta2 * (-planVector) + sqrt(1-sinTheta2*sinTheta2) * (-normal);
+				Vec3Df newDir;
+				if(sinTheta2 <= 1)
+					newDir = sinTheta2 * (-planVector) + sqrt(1-sinTheta2*sinTheta2) * (-normal);
+				else
+					newDir = sinTheta1 * (-planVector) + sqrt(1-sinTheta1*sinTheta1) * normal;
 
 				Ray newRay(intersectionPointGlobalMark + epsilon * newDir, newDir);
 				newRay.intersectReverseTriangles = true;
