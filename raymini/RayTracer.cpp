@@ -378,7 +378,7 @@ float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
 		const Object &o = scene->getObjects()[k];
 		Ray ray(intersectionPoint + epsilon * shadowRayDirection - o.getTrans(), shadowRayDirection);
 		ray.isASegment = true;
-		ray.intersectReverseTriangles = true;
+		ray.intersectReverseTriangles = false;
 		if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
 			intersectionShadow += 1.0;
 	  }
@@ -477,10 +477,8 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 	Triangle intersectionTriangle;
 	const Object *o = getObjectIntersected(ray, intersectionPoint, intersectionTriangle);
 	if (o != NULL) {
-		Vec3Df emitance = o->getMaterial().getEmitance();
-		if(emitance[0] != 0 || emitance[1] != 0 || emitance[2] != 0) {
+		if((float)rand()/RAND_MAX < (float)depth/(pathTraceDepthLoic))
 			return o->getMaterial().getEmitance();
-		}
 
 		Vec3Df normal = getNormalAtIntersection(*o, intersectionPoint, intersectionTriangle);
 		Vec3Df intersectionPointGlobalMark = intersectionPoint + o->getTrans();
