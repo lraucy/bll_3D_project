@@ -428,7 +428,7 @@ float RayTracer::shadowRay(const Vec3Df &intersectionPoint) const{
 float RayTracer::ambientOcclusion(const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
 	if(aoOpt)
 		return aoCoeff * 255 * computeAmbientOcclusion(intersectionPoint, normal, aoNbRay,
-					(float)aoSphereRadius, (float)aoConeAngle*M_PI/180);
+					(float)aoSphereRadius, (float)aoConeAngle);
 	else
 		return 0.0;
 }
@@ -438,7 +438,11 @@ float RayTracer::computeAmbientOcclusion(const Vec3Df &intersectionPoint,
 	Scene *scene = Scene::getInstance();
 
 	R = scene->getBoundingBox().getSize() * R / 100;
-	Vec3Df secondVec(-normal[1],normal[0],0.0); // compute second perpendicular vector
+	Vec3Df secondVec;
+	if(normal[0] != 0)
+		secondVec = Vec3Df(-normal[1],normal[0],0.0); // compute second perpendicular vector
+	else
+		secondVec = Vec3Df(0.0, -normal[2], normal[1]);
 	Vec3Df thirdVec = Vec3Df::crossProduct(normal, secondVec);
 	secondVec.normalize();
 	thirdVec.normalize();

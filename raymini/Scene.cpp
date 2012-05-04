@@ -109,7 +109,7 @@ void Scene::buildDefaultScene () {
   ramMesh.loadOFF ("models/ram.off");
   Material ramMat (1.f, 1.f, Vec3Df (1.f, .6f, .2f));
   Object ram (ramMesh, ramMat, QString("Biquette"));
-  ram.setTrans (Vec3Df (1.f, 0.5f, 0.f));
+  ram.setTrans (Vec3Df (1.f, 0.f, 0.f));
   objects.push_back (ram);
     
   Mesh rhinoMesh;
@@ -125,6 +125,13 @@ void Scene::buildDefaultScene () {
   Object garg (gargMesh, gargMat, QString("Gargoyle"));
   garg.setTrans (Vec3Df (-1.f, 1.0f, 0.1f));
   objects.push_back (garg);
+
+  Mesh cubeMesh;
+  cubeMesh.loadOFF ("models/cube.off");
+  Material cubeMat (1.0f, 0.2f, Vec3Df (0.6f, 0.6f, 0.7f));
+  Object cube (cubeMesh, cubeMat, QString("Rhino"));
+  cube.setTrans (Vec3Df (1.5f, 1.5f, 0.5f));
+  objects.push_back (cube);
     
   for (unsigned int i = 0; i < objects.size(); i++)
     objects[i].getMesh().buildKdTree();
