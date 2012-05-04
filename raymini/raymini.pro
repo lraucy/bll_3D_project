@@ -47,7 +47,7 @@ win32 {
 }
 unix {
     LIBS += -lGLEW \
-            -lQGLViewer
+            -lQGLViewer \
 }
 
 MOC_DIR = .tmp

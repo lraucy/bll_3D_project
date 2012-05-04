@@ -138,13 +138,18 @@ Vec3Df RayTracer::getPhongBRDFWithLights(const Ray &ray, const Object &o, const 
 
 
 	Vec3Df color(0.0f, 0.0f, 0.0f);
+	float a = 1.0;
+	float b=0.0;
+	float c=0.2;
 	for (unsigned int i = 0; i < lights.size(); i++) {
 	  Light l = lights[i];
 		Vec3Df toLight = l.getPos() - intersectionPoint;
 		toLight.normalize();
 		Vec3Df r = (ray.getOrigin() - intersectionPoint);
 		r.normalize();
-		color += l.getIntensity() * l.getColor() * getPhongBRDF(r, toLight, normal, o.getMaterial());
+		float distance = Vec3Df::distance(l.getPos(), intersectionPoint); 
+		float intensity = 1/(a+b*distance+c*pow(distance,2));
+		color += intensity * l.getIntensity() * l.getColor() * getPhongBRDF(r, toLight, normal, o.getMaterial());
 	}
 
 	color = color * 255;
@@ -203,7 +208,7 @@ Vec3Df RayTracer::pathTracerRec(const Ray & ray, const Object & intersectedObjec
     return color;
   }
 
-  std::vector<Vec3Df> direction = getRandomDirections(intP, pathTraceAngle);
+  std::vector<Vec3Df> direction = getRandomDirections(intP, 90);
   Vec3Df pos = intP.getPos() + intersectedObject.getTrans();
   
   for(unsigned int i = 0; i<direction.size(); i++){
@@ -375,7 +380,7 @@ float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
 		ray.isASegment = true;
 		ray.intersectReverseTriangles = true;
 		if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
-			intersectionShadow += 1.0;
+		  intersectionShadow += 1.0*scene->getLights()[i].getIntensity();
 	  }
 
   }
@@ -397,7 +402,7 @@ float RayTracer::softShadowRay(const Vec3Df &intersectionPoint,
 			ray.isASegment = true;
 			ray.intersectReverseTriangles = true;
 			if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
-				counter += (1.0/nbSamples/scene->getLights().size());
+				counter += (1.0/nbSamples/scene->getLights().size())*scene->getLights()[i].getIntensity();
 		  }
 	  }
   }
