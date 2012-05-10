@@ -144,7 +144,7 @@ Vec3Df RayTracer::getPhongBRDFWithLights(const Ray &ray, const Object &o, const 
 	Vec3Df color(0.0f, 0.0f, 0.0f);
 	float a = 1.0;
 	float b=0.0;
-	float c=0.2;
+	float c=0.01;
 	for (unsigned int i = 0; i < lights.size(); i++) {
 	  Light l = lights[i];
 		Vec3Df toLight = l.getPos() - intersectionPoint;

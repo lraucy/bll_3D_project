@@ -15,6 +15,12 @@
 #include "Light.h"
 #include "BoundingBox.h"
 
+#define SCENE_DEFAULT_SCENE 0
+#define SCENE_FINAL_SCENE 1
+#define SCENE_CLOSED_BOX_SCENE 2
+#define SCENE_CLOSED_BOX_PATH_TRACING_SCENE 3
+#define SCENE_DOUBLE_LIGHT_SCENE 4
+
 class Scene {
 public:
     static Scene * getInstance ();
@@ -29,13 +35,18 @@ public:
     inline const BoundingBox & getBoundingBox () const { return bbox; }
     void updateBoundingBox ();
 	void rebuildKdTree();
-    
+
+    void switchScene(unsigned int scene);
 protected:
     Scene ();
     virtual ~Scene ();
     
 private:
     void buildDefaultScene ();
+    void buildClosedBoxScene ();
+    void buildFinalScene ();
+    void buildDoubleLightScene ();
+    void buildClosedBoxPathTracingScene ();
     std::vector<Object> objects;
     std::vector<Light> lights;
     BoundingBox bbox;
