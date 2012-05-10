@@ -17,13 +17,24 @@
 
 class Material {
 public:
-    inline Material () : diffuse (0.8f), specular (0.2f), color (0.5f, 0.5f, 0.5f) , reflectance (0.0f), emitance(Vec3Df(0,0,0)){}
-    inline Material (float diffuse, float specular, const Vec3Df & color)
-        : diffuse (diffuse), specular (specular), color (color), reflectance (0.0f), emitance(Vec3Df(0,0,0)){}
-    inline Material (float diffuse, float specular, const Vec3Df & color, const Vec3Df &emitance)
-        : diffuse (diffuse), specular (specular), color (color), reflectance (0.0f), emitance(emitance){}
-	inline Material (float diffuse, float specular, const Vec3Df & color, float reflectance)
-        : diffuse (diffuse), specular (specular), color (color), reflectance (reflectance), emitance(Vec3Df(0,0,0)){}
+    inline Material (float diffuse=0.8f,
+			float specular=0.2f,
+			const Vec3Df & color=Vec3Df(0.5f,0.5f,0.5f),
+			float reflectance=0.0f,
+			const Vec3Df &emitance=Vec3Df(0,0,0),
+			bool isTransparent=false,
+			float probaTransmission=0.0f,
+			float probaReflection=1.0f,
+			float refractionIndex=1.0f)
+        : diffuse (diffuse),
+		specular (specular),
+		color (color),
+		reflectance (reflectance),
+		emitance(emitance),
+		transparent(isTransparent),
+		probaTransmission(probaTransmission),
+		probaReflection(probaReflection),
+		refractionIndex(refractionIndex){}
     virtual ~Material () {}
 
     inline float getDiffuse () const { return diffuse; }
@@ -31,6 +42,10 @@ public:
     inline Vec3Df getColor () const { return color; }
 	inline float getReflectance () const { return reflectance; }
 	inline const Vec3Df & getEmitance() const {return emitance;}
+	inline bool isTransparent() const { return transparent;}
+	inline float getProbaTransmission() const {return probaTransmission;}
+	inline float getProbaReflection() const {return probaReflection;}
+	inline float getRefractionIndex() const {return refractionIndex;}
 
     inline void setDiffuse (float d) { diffuse = d; }
     inline void setSpecular (float s) { specular = s; }
@@ -44,6 +59,12 @@ private:
     Vec3Df color;
     float reflectance;
 	Vec3Df emitance;
+	bool transparent;
+	float probaTransmission;
+	float probaReflection;
+	float refractionIndex;
+
+	
 };
 
 

@@ -65,6 +65,9 @@ public slots :
   void setPathTraceDepth(int depth) ;
   double getPathTraceAngle() ;
   void setPathTraceAngle(double angle) ;
+  void setMaxDepth(int depth);
+  void setTrianglePerLeaf(int triangleNb);
+  void rebuildKdTree();
 
 private :
     void initControlWidget ();

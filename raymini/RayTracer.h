@@ -88,7 +88,7 @@ protected:
 	  shadowNbRay = 10; aoOpt = false; pathTraceNbRay = 5; pathTraceAngle = M_PI/2; pathTraceDepth = 2;
 	  iterationPathTracingLoic = 0; pathTraceDepthLoic = 4; iterationPerTracingLoic = 10;}
     inline virtual ~RayTracer () {}
-	const Object * getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
+	const Object * getObjectIntersected(Ray &ray,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
 
 	Vec3Df getNormalAtIntersection(const Object &o, const Vec3Df &intersectionPoint,
@@ -115,10 +115,10 @@ protected:
 	Vec3Df getColorFromPixelWithAAx2(const Vec3Df &camPos, const Vec3Df &dir) const;
 	Vec3Df getColorFromPixelWithAAx3(const Vec3Df &camPos, const Vec3Df &dir) const;
       
-  float shadowRay(const Vec3Df &intersectionPoint) const;
-  float hardShadowRay(const Vec3Df &intersectionPoint) const;
+	std::vector<float> shadowRay(const Vec3Df &intersectionPoint) const;
+  std::vector<float> hardShadowRay(const Vec3Df &intersectionPoint) const;
   
-  float softShadowRay(const Vec3Df &intersectionPoint, 
+  std::vector<float> softShadowRay(const Vec3Df &intersectionPoint, 
 						const unsigned int nbSamples) const;
 	float ambientOcclusion(const Vec3Df &intersectionPoint, const Vec3Df &normal) const;
 	float computeAmbientOcclusion(const Vec3Df &intersectionPoint,

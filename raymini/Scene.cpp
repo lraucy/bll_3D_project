@@ -32,6 +32,15 @@ Scene::Scene () {
 Scene::~Scene () {
 }
 
+
+void Scene::rebuildKdTree() {
+	for (unsigned int i = 0; i < objects.size(); i++) {
+		delete objects[i].getMesh().kdTree;
+		objects[i].getMesh().buildKdTree();
+	}
+	
+}
+
 void Scene::updateBoundingBox () {
   if (objects.empty ())
     bbox = BoundingBox ();
@@ -91,6 +100,7 @@ void Scene::buildDefaultScene () {
  
   
   Mesh wallRightMesh;
+
   wallRightMesh.loadOFF ("models/WallRightModified.off");
   Material wallRightMat(0.8f, 0.2f, Vec3Df(0.f, 0.f, 1.f)) ;
   Object wallRight (wallRightMesh, wallRightMat, QString("Wall right"));    
@@ -150,10 +160,17 @@ void Scene::buildDefaultScene () {
     
   Mesh gargMesh;
   gargMesh.loadOFF ("models/gargoyle.off");
-  Material gargMat (0.7f, 0.4f, Vec3Df (0.5f, 0.8f, 0.5f));
+  Material gargMat (0.7f, 0.4f, Vec3Df (0.5f, 0.8f, 0.5f), 0.0f, Vec3Df(0,0,0), true, 0.7f, 0.3f, 1.3f);
   Object garg (gargMesh, gargMat, QString("Gargoyle"));
   garg.setTrans (Vec3Df (-2.3f, -0.4f, 3.35f));
   objects.push_back (garg);
+
+  Mesh cubeMesh;
+  cubeMesh.loadOFF ("models/cube.off");
+  Material cubeMat (1.0f, 0.2f, Vec3Df (0.6f, 0.6f, 0.7f));
+  Object cube (cubeMesh, cubeMat, QString("Rhino"));
+  cube.setTrans (Vec3Df (1.5f, 1.5f, 0.5f));
+  objects.push_back (cube);
     
   for (unsigned int i = 0; i < objects.size(); i++)
     objects[i].getMesh().buildKdTree();

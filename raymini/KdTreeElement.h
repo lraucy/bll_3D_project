@@ -14,7 +14,7 @@ class BoundingBox;
 
 class KdTreeElement {
 public:
-	static KdTreeElement* getKdTreeElement(const Mesh &mesh, std::vector<Triangle> &triangles);
+	static KdTreeElement* getKdTreeElement(const Mesh &mesh, std::vector<Triangle> &triangles, unsigned int depth);
 	~KdTreeElement();
 
 	KdTreeElement *leftChild;
@@ -23,6 +23,10 @@ public:
 	std::vector<Triangle> triangles;
 	BoundingBox *boundingBox;
 
+	static inline void setMaxDepth(unsigned int maxDepth_) {maxDepth = maxDepth_;}
+	static unsigned int maxDepth;
+	static inline void setTrianglePerLeaf(unsigned int trianglePerLeaf_) {trianglePerLeaf = trianglePerLeaf_;}
+	static unsigned int trianglePerLeaf;
 
 private:
 	inline KdTreeElement(KdTreeElement * leftChild_,

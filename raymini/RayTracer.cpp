@@ -100,7 +100,7 @@ QImage RayTracer::render (const QImage &image_,
 	return image;
 }
 
-const Object * RayTracer::getObjectIntersected(const Vec3Df &camPos, const Vec3Df &dir,
+const Object * RayTracer::getObjectIntersected(Ray &ray,
 							Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const{
 
 	Scene * scene = Scene::getInstance();
@@ -110,10 +110,12 @@ const Object * RayTracer::getObjectIntersected(const Vec3Df &camPos, const Vec3D
 
 	for (unsigned int k = 0; k < scene->getObjects().size (); k++) {
 		const Object & o = scene->getObjects()[k];
-		Ray ray (camPos-o.getTrans (), dir);
+		ray.translate(-o.getTrans());
 
 		if(ray.intersect(o.getMesh(), o.getMesh().kdTree, intersectionPoint, smallestIntersectionDistance, intersectionTriangle))
 			objectIntersected = &o;
+
+		ray.translate(o.getTrans());
 	}
 	return objectIntersected;
 }
@@ -182,7 +184,8 @@ Vec3Df RayTracer::pathTracer(const Vec3Df &camPos, const Vec3Df &dir) const {
   Vec3Df intersectionPoint;
   const Object * objectIntersected = NULL;
   
-  objectIntersected = getObjectIntersected(camPos, dir, intersectionPoint, intersectionTriangle);
+  Ray ray (camPos, dir);
+  objectIntersected = getObjectIntersected(ray, intersectionPoint, intersectionTriangle);
   
   if(objectIntersected != NULL){
     Ray ray (camPos-objectIntersected->getTrans (), dir);
@@ -218,7 +221,8 @@ Vec3Df RayTracer::pathTracerRec(const Ray & ray, const Object & intersectedObjec
         Vec3Df intPos;
 	Triangle intersectionTriangle;
 
-	intObject = getObjectIntersected(pos,direction[i],intersectionPoint,intersectionTriangle);
+	Ray rayInter (pos, direction[i]);
+	intObject = getObjectIntersected(rayInter,intersectionPoint,intersectionTriangle);
 	
 	if(intObject != NULL){
 	  Ray newRay(pos, direction[i]);
@@ -301,21 +305,26 @@ Vec3Df RayTracer::getColorFromRayWithRayTracing(const Vec3Df &camPos, const Vec3
 	Triangle intersectionTriangle;
 	Vec3Df intersectionPoint;
 	const Object * objectIntersected = NULL;
+	std::vector<float> lightsIntensity;
+	std::vector<Light> lights = Scene::getInstance()->getLights();
 
-	objectIntersected = getObjectIntersected(camPos, dir, intersectionPoint,
+	Ray ray (camPos, dir);
+	objectIntersected = getObjectIntersected(ray, intersectionPoint,
 			intersectionTriangle);
 	if(objectIntersected != NULL) {
 		Ray ray (camPos, dir);
 		Vec3Df normal = getNormalAtIntersection(*objectIntersected, intersectionPoint,
 				intersectionTriangle);
 		Vec3Df intersectionPointGlobalMark = intersectionPoint + objectIntersected->getTrans();
-		c = getPhongBRDF(ray, *objectIntersected, intersectionPointGlobalMark, normal);
+		lightsIntensity = shadowRay(intersectionPointGlobalMark);
+
+		for (unsigned int i = 0; i < lights.size(); i++)
+			lights[i].setIntensity(lightsIntensity[i]*lights[i].getIntensity());
+		c = getPhongBRDFWithLights(ray, *objectIntersected, intersectionPointGlobalMark, normal, lights);
 		c += ambientOcclusion(intersectionPointGlobalMark, normal) * objectIntersected->getMaterial().getColor();
 
 		normal.normalize();
 		c += getPhongBRDFReflectance(ray, *objectIntersected, intersectionPointGlobalMark, normal);
-		float coef = shadowRay(intersectionPointGlobalMark);
-		c = c * Vec3Df(coef, coef, coef);
 	}
 	return c;
 }
@@ -366,34 +375,37 @@ Vec3Df RayTracer::getColor(const Vec3Df &camPos, const Vec3Df &dir) const {
   return getColorFromPixel(camPos, dir); 
 }
 
-float RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
+std::vector<float> RayTracer::hardShadowRay(const Vec3Df &intersectionPoint) const{
   Scene * scene = Scene::getInstance();
   float epsilon = 0.001;
-  float intersectionShadow = 0.0;
+  std::vector<float> tab;
 
   for (unsigned int i = 0; i < scene->getLights().size(); i++)
   {
+	  tab.push_back(1.0);
 	  Vec3Df shadowRayDirection = scene->getLights()[i].getPos() - intersectionPoint;
 	  for (unsigned int k = 0; k < scene->getObjects().size(); k++) {
 		const Object &o = scene->getObjects()[k];
 		Ray ray(intersectionPoint + epsilon * shadowRayDirection - o.getTrans(), shadowRayDirection);
 		ray.isASegment = true;
-		ray.intersectReverseTriangles = true;
+		ray.intersectReverseTriangles = false;
 		if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
-		  intersectionShadow += 1.0*scene->getLights()[i].getIntensity();
+
+		  tab[i] = 1 - 1.0*scene->getLights()[i].getIntensity();
 	  }
 
   }
-  return 1.0 - intersectionShadow / scene->getLights().size();
+  return tab;
 }
 
-float RayTracer::softShadowRay(const Vec3Df &intersectionPoint, 
+std::vector<float> RayTracer::softShadowRay(const Vec3Df &intersectionPoint, 
 			       const unsigned int nbSamples) const{
   Scene * scene = Scene::getInstance();
   float epsilon = 0.001;
-  float counter = 0.0;
+  std::vector<float> tab;
   
   for (unsigned int i = 0; i < scene->getLights().size(); i++) {
+	  tab.push_back(1.0);
 	  for (unsigned int j = 0; j < nbSamples; j++) {
 		  Vec3Df shadowRayDirection = scene->getLights()[i].getRandomPoint() - intersectionPoint;
 		  for (unsigned int k = 0; k < scene->getObjects().size(); k++) {
@@ -402,33 +414,35 @@ float RayTracer::softShadowRay(const Vec3Df &intersectionPoint,
 			ray.isASegment = true;
 			ray.intersectReverseTriangles = true;
 			if(ray.intersect(o.getMesh(), o.getMesh().kdTree))
-				counter += (1.0/nbSamples/scene->getLights().size())*scene->getLights()[i].getIntensity();
+			  tab[i] -= (1.0/nbSamples)*scene->getLights()[i].getIntensity();
 		  }
 	  }
   }
-  return 1. - counter;
+  return tab;
 }
 
-float RayTracer::shadowRay(const Vec3Df &intersectionPoint) const{
+std::vector<float> RayTracer::shadowRay(const Vec3Df &intersectionPoint) const{
   switch(shadowOpt){
-  case RAYTRACER_NO_SHADOW: 
-    return 1.0;
-    break;
   case RAYTRACER_HARD_SHADOW:
     return hardShadowRay(intersectionPoint);
     break;
   case RAYTRACER_SOFT_SHADOW:
     return softShadowRay(intersectionPoint, shadowNbRay);
     break;
+  default: 
+	std::vector<float> tab;
+	for (unsigned int i = 0; i < Scene::getInstance()->getLights().size(); i++)
+		tab.push_back(1.0);
+    return tab;
+    break;
   }
-  return 1.0;
 }
 
 
 float RayTracer::ambientOcclusion(const Vec3Df &intersectionPoint, const Vec3Df &normal) const{
 	if(aoOpt)
 		return aoCoeff * 255 * computeAmbientOcclusion(intersectionPoint, normal, aoNbRay,
-					(float)aoSphereRadius, (float)aoConeAngle*M_PI/180);
+					(float)aoSphereRadius, (float)aoConeAngle);
 	else
 		return 0.0;
 }
@@ -438,7 +452,11 @@ float RayTracer::computeAmbientOcclusion(const Vec3Df &intersectionPoint,
 	Scene *scene = Scene::getInstance();
 
 	R = scene->getBoundingBox().getSize() * R / 100;
-	Vec3Df secondVec(-normal[1],normal[0],0.0); // compute second perpendicular vector
+	Vec3Df secondVec;
+	if(normal[0] != 0)
+		secondVec = Vec3Df(-normal[1],normal[0],0.0); // compute second perpendicular vector
+	else
+		secondVec = Vec3Df(0.0, -normal[2], normal[1]);
 	Vec3Df thirdVec = Vec3Df::crossProduct(normal, secondVec);
 	secondVec.normalize();
 	thirdVec.normalize();
@@ -475,14 +493,37 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 
 	Vec3Df intersectionPoint;
 	Triangle intersectionTriangle;
-	const Object *o = getObjectIntersected(ray.getOrigin(), ray.getDirection(), intersectionPoint, intersectionTriangle);
+	const Object *o = getObjectIntersected(ray, intersectionPoint, intersectionTriangle);
 	if (o != NULL) {
-		if(rand() < RAND_MAX/2) {
+		if((float)rand()/RAND_MAX < (float)depth/(pathTraceDepthLoic))
 			return o->getMaterial().getEmitance();
-		}
 
 		Vec3Df normal = getNormalAtIntersection(*o, intersectionPoint, intersectionTriangle);
 		Vec3Df intersectionPointGlobalMark = intersectionPoint + o->getTrans();
+
+		if(o->getMaterial().isTransparent()) {
+			if((float)rand()/RAND_MAX < o->getMaterial().getProbaTransmission()) {
+				float epsilon = 0.01;
+
+				if (ray.reverseTriangleIntersected)
+					normal = -normal;
+
+				Vec3Df planVector = Vec3Df::crossProduct(normal, Vec3Df::crossProduct(-ray.getDirection(), normal));
+				float sinTheta1 = planVector.getLength();
+				float n = (ray.reverseTriangleIntersected) ? o->getMaterial().getRefractionIndex() : 1.0 / o->getMaterial().getRefractionIndex();
+				float sinTheta2 = n * sinTheta1;
+				Vec3Df newDir;
+				if(sinTheta2 <= 1)
+					newDir = sinTheta2 * (-planVector) + sqrt(1-sinTheta2*sinTheta2) * (-normal);
+				else
+					newDir = sinTheta1 * (-planVector) + sqrt(1-sinTheta1*sinTheta1) * normal;
+
+				Ray newRay(intersectionPointGlobalMark + epsilon * newDir, newDir);
+				newRay.intersectReverseTriangles = true;
+				return tracePathLoic(newRay, depth);
+			}
+		}
+
 		Ray * newRay = getRandomRay(intersectionPointGlobalMark, normal);
 
 		Vec3Df colorReflected = tracePathLoic(*newRay, depth+1);
@@ -491,6 +532,7 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 		Vec3Df color = cosOmega * getPhongBRDF(-ray.getDirection(), newRay->getDirection(), normal, o->getMaterial()) * colorReflected;
 		delete newRay;
 		return color;
+
 	}
 	else
 		return Vec3Df(0.0f, 0.0f, 0.0f);

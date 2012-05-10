@@ -63,7 +63,12 @@ bool Ray::intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint) const
 }
 
 #define SMALL_NUMBER 0.0000001
+
 bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & intersectionPoint) const {
+	bool reverse;
+	return intersect(mesh, triangle, intersectionPoint, reverse);
+}
+bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & intersectionPoint, bool &reverse) const {
 	// method found on http://softsurfer.com/Archive/algorithm_0105/algorithm_0105.htm
 	const std::vector<Vertex> & vertices = mesh.getVertices();
 	const Vec3Df & v0 = vertices[triangle.getVertex(0)].getPos();
@@ -83,6 +88,11 @@ bool Ray::intersect (const Mesh & mesh, const Triangle & triangle, Vec3Df & inte
 	if (r < 0.0 || (isASegment && r > 1.0))
 		return false;
 	intersectionPoint = this->origin + r * this->direction;
+
+	if(denominator > 0)
+		reverse = true;
+	else
+		reverse = false;
 
 	Vec3Df w = intersectionPoint - v0;
 
@@ -113,43 +123,55 @@ bool Ray::intersectInSphere (const Mesh &mesh, KdTreeElement *kdTree,
 		if((bbIntersection - originSphere).getSquaredLength() > R*R)
 			return false;
 
-		for(unsigned int i = 0; i < kdTree->triangles.size(); i++) {
-			if(this->intersect(mesh, kdTree->triangles[i], intersectionPoint))
-				if((intersectionPoint - originSphere).getSquaredLength() <= R*R)
+		if(kdTree->leftChild == NULL && kdTree->rightChild == NULL) {
+			for(unsigned int i = 0; i < kdTree->triangles.size(); i++) {
+				if(this->intersect(mesh, kdTree->triangles[i], intersectionPoint))
+					if((intersectionPoint - originSphere).getSquaredLength() <= R*R)
+						return true;
+			}
+		}
+		else {
+			if(kdTree->leftChild != NULL)
+				if(this->intersectInSphere(mesh, kdTree->leftChild, originSphere, R))
+					return true;
+			if(kdTree->rightChild != NULL)
+				if(this->intersectInSphere(mesh, kdTree->rightChild, originSphere, R))
 					return true;
 		}
-		if(kdTree->leftChild != NULL)
-			if(this->intersectInSphere(mesh, kdTree->leftChild, originSphere, R))
-				return true;
-		if(kdTree->rightChild != NULL)
-			if(this->intersectInSphere(mesh, kdTree->rightChild, originSphere, R))
-				return true;
 	}
 	return false;
 }
 
-bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree, Vec3Df &intersectionPoint, float &intersectionDistance, Triangle &triangle) const {
+bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree, Vec3Df &intersectionPoint, float &intersectionDistance, Triangle &triangle) {
 	bool returnValue = false;
 
 	Vec3Df bbIntersection;
 	Vec3Df triangleIntersection;
+	bool reverseTriangle;
 	if(this->intersect(*kdTree->boundingBox, bbIntersection)) {
-		for(unsigned int i = 0; i < kdTree->triangles.size(); i++) {
-			if(this->intersect(mesh, kdTree->triangles[i], triangleIntersection)) {
-				float intersectionDistCurrent = Vec3Df::squaredDistance(triangleIntersection,
-						this->origin);
-				if(intersectionDistCurrent < intersectionDistance) {
-					intersectionDistance = intersectionDistCurrent;
-					intersectionPoint = triangleIntersection;
-					triangle = kdTree->triangles[i];
-					returnValue = true;
+
+
+		if(kdTree->leftChild == NULL && kdTree->rightChild == NULL) {
+			for(unsigned int i = 0; i < kdTree->triangles.size(); i++) {
+				if(this->intersect(mesh, kdTree->triangles[i], triangleIntersection, reverseTriangle)) {
+					float intersectionDistCurrent = Vec3Df::squaredDistance(triangleIntersection,
+							this->origin);
+					if(intersectionDistCurrent < intersectionDistance) {
+						intersectionDistance = intersectionDistCurrent;
+						intersectionPoint = triangleIntersection;
+						triangle = kdTree->triangles[i];
+						returnValue = true;
+						this->reverseTriangleIntersected = reverseTriangle;
+					}
 				}
 			}
 		}
-		if(kdTree->leftChild != NULL)
-		  returnValue |= this->intersect(mesh, kdTree->leftChild, intersectionPoint, intersectionDistance, triangle);
-		if(kdTree->rightChild != NULL)
-		  returnValue |= this->intersect(mesh, kdTree->rightChild, intersectionPoint, intersectionDistance, triangle);
+		else {
+			if(kdTree->leftChild != NULL)
+			  returnValue |= this->intersect(mesh, kdTree->leftChild, intersectionPoint, intersectionDistance, triangle);
+			if(kdTree->rightChild != NULL)
+			  returnValue |= this->intersect(mesh, kdTree->rightChild, intersectionPoint, intersectionDistance, triangle);
+		}
 	}
 
 	return returnValue;
@@ -158,19 +180,25 @@ bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree, Vec3Df &intersecti
 bool Ray::intersect (const Mesh &mesh, KdTreeElement *kdTree) const {
 	Vec3Df bbIntersection;
 	Vec3Df triangleIntersection;
+
 	if(this->intersect(*kdTree->boundingBox, bbIntersection)) {
-		for(unsigned int i = 0; i < kdTree->triangles.size(); i++) {
-			if(this->intersect(mesh, kdTree->triangles[i], triangleIntersection))
+		if(kdTree->leftChild == NULL && kdTree->rightChild == NULL) {
+			for(unsigned int i = 0; i < kdTree->triangles.size(); i++) {
+				if(this->intersect(mesh, kdTree->triangles[i], triangleIntersection))
+					return true;
+			}
+		}
+		else {
+			if(kdTree->leftChild != NULL
+					&& this->intersect(mesh, kdTree->leftChild))
 				return true;
+
+			if(kdTree->rightChild != NULL
+					&& this->intersect(mesh, kdTree->rightChild))
+				return true;
+		
 		}
 
-		if(kdTree->leftChild != NULL
-				&& this->intersect(mesh, kdTree->leftChild))
-			return true;
-
-		if(kdTree->rightChild != NULL
-				&& this->intersect(mesh, kdTree->rightChild))
-			return true;
 	}
 
 	return false;
