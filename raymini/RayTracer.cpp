@@ -83,14 +83,16 @@ QImage RayTracer::render (const QImage &image_,
 			dir.normalize ();
 
 			Vec3Df c = getColor(camPos, dir);
-
+			/*
 			if(tracing == PATH_TRACING_LOIC) {
+			  std::cout << "path tracing \n";
 				Vec3Df old_color(0,0,0);
 				if(iterationPathTracingLoic != 0)
-					old_color = Vec3Df(qRed(image.pixel(i,j)), qGreen(image.pixel(i,j)), qBlue(image.pixel(i,j)));
-				c = (old_color*sqrt(iterationPathTracingLoic) + c)/sqrt(iterationPathTracingLoic+iterationPerTracingLoic);
+			
+				  // old_color = Vec3Df(qRed(image.pixel(i,j)), qGreen(image.pixel(i,j)), qBlue(image.pixel(i,j)));
+				  // c = (old_color*sqrt(iterationPathTracingLoic) + c)/sqrt(iterationPathTracingLoic+iterationPerTracingLoic);
 			}
-
+			*/
 			image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
 		}
 	}
@@ -290,7 +292,7 @@ Vec3Df RayTracer::getColorFromRay(const Vec3Df &camPos, const Vec3Df &dir) const
 			Vec3Df color(0.0,0.0,0.0);
 			for (unsigned int i = 0; i < iterationPerTracingLoic; i++)
 				color += tracePathLoic(ray, 0);
-			return color;
+			return color/(sqrt(iterationPerTracingLoic));
 			break;
 	}
 	return getColorFromRayWithRayTracing(camPos, dir);
@@ -495,8 +497,12 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 	Triangle intersectionTriangle;
 	const Object *o = getObjectIntersected(ray, intersectionPoint, intersectionTriangle);
 	if (o != NULL) {
-		if((float)rand()/RAND_MAX < (float)depth/(pathTraceDepthLoic))
-			return o->getMaterial().getEmitance();
+
+	  if(o->getMaterial().getEmitance()[0]>0)
+	    return o->getMaterial().getEmitance();
+
+	  if(o->getMaterial().getDiffuse() <= 0)
+		  return Vec3Df(0.0f, 0.0f, 0.0f);
 
 		Vec3Df normal = getNormalAtIntersection(*o, intersectionPoint, intersectionTriangle);
 		Vec3Df intersectionPointGlobalMark = intersectionPoint + o->getTrans();
@@ -525,14 +531,13 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 		}
 
 		Ray * newRay = getRandomRay(intersectionPointGlobalMark, normal);
-
-		Vec3Df colorReflected = tracePathLoic(*newRay, depth+1);
 		float cosOmega = std::max(Vec3Df::dotProduct(newRay->getDirection(), normal), 0.0f);
 
-		Vec3Df color = cosOmega * getPhongBRDF(-ray.getDirection(), newRay->getDirection(), normal, o->getMaterial()) * colorReflected;
+		Vec3Df color =  tracePathLoic(*newRay, depth+1) * (getPhongBRDF(-ray.getDirection(), newRay->getDirection(), normal, o->getMaterial())*cosOmega);
 		delete newRay;
 		return color;
 
+	  
 	}
 	else
 		return Vec3Df(0.0f, 0.0f, 0.0f);
