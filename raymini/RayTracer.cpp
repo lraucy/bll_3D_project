@@ -495,11 +495,8 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 	  if(o->getMaterial().getEmitance()[0]>0)
 	    return o->getMaterial().getEmitance();
 
-	  if(o->getMaterial().getDiffuse()>0){
-
-
-
-
+	  if(o->getMaterial().getDiffuse() <= 0)
+		  return Vec3Df(0.0f, 0.0f, 0.0f);
 
 		Vec3Df normal = getNormalAtIntersection(*o, intersectionPoint, intersectionTriangle);
 		Vec3Df intersectionPointGlobalMark = intersectionPoint + o->getTrans();
@@ -534,7 +531,7 @@ Vec3Df RayTracer::tracePathLoic(Ray &ray, unsigned int depth) const {
 		delete newRay;
 		return color;
 
-	  }
+	  
 	}
 	else
 		return Vec3Df(0.0f, 0.0f, 0.0f);
