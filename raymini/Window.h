@@ -30,12 +30,14 @@ public:
     static void showStatusMessage (const QString & msg);  
     
 public slots :
-    void renderRayImage (unsigned int mode);
+    void renderRayImage ();
     void setBGColor ();
     void showRayImage ();
     void exportGLImage ();
     void exportRayImage ();
     void about ();
+
+	void setRayOption(int option);
   void setShadowOption(int option);
   void setAaOption(int option);
   void setShadowNumberRay(int nbRay);
@@ -56,9 +58,6 @@ public slots :
   int getAOConeAngle();
   void setAOCoeff(double coeff);
   double getAOCoeff();
-  void rayTraceImage () ;
-  void pathTraceImage () ;
-  void pathTraceImageLoic () ;
   int getPathTraceNumberRay() ;
   void setPathTraceNumberRay(int NbRay) ;
   double getPathTraceDepth() ;
@@ -70,14 +69,20 @@ public slots :
   void rebuildKdTree();
 
 private :
-    void initControlWidget ();
+    void initMenu ();
+	QWidget * getGeneralTabWidget();
+	QWidget * getGeneralSettingsTabWidget();
+	QWidget * getPathTracingSettingsTabWidget();
+	QWidget * getKdTreeSettingsTabWidget();
+	QWidget * getSceneSettingsTabWidget();
 	QGroupBox * getWidgetObject (Object &o, QWidget *parent);
 	QGroupBox * getWidgetLight (Light &l, QWidget *parent);
         
     QActionGroup * actionGroup;
-    QGroupBox * controlWidget;
 	QScrollArea * scrollArea;
+	QWidget * controlWidget;
     QString currentDirectory;
+	int modeTracing;
 
     GLViewer * viewer;
 };

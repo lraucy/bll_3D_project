@@ -51,9 +51,9 @@ Window::Window () : QMainWindow (NULL) {
     setCentralWidget (viewer);
     
     QDockWidget * controlDockWidget = new QDockWidget (this);
-    initControlWidget ();
+    initMenu ();
     
-    controlDockWidget->setWidget (scrollArea);
+    controlDockWidget->setWidget (controlWidget);
     controlDockWidget->adjustSize ();
     addDockWidget (Qt::RightDockWidgetArea, controlDockWidget);
     controlDockWidget->setFeatures (QDockWidget::AllDockWidgetFeatures);
@@ -63,18 +63,8 @@ Window::Window () : QMainWindow (NULL) {
 Window::~Window () {
 
 }
-void Window::rayTraceImage () {
-  renderRayImage (RAY_TRACING);
-}
-void Window::pathTraceImage () {
-  renderRayImage (PATH_TRACING);
-}
 
-void Window::pathTraceImageLoic () {
-  renderRayImage (PATH_TRACING_LOIC);
-}
-
-void Window::renderRayImage (unsigned int mode) {
+void Window::renderRayImage () {
     qglviewer::Camera * cam = viewer->camera ();
     RayTracer * rayTracer = RayTracer::getInstance ();
     qglviewer::Vec p = cam->position ();
@@ -91,7 +81,7 @@ void Window::renderRayImage (unsigned int mode) {
     unsigned int screenHeight = cam->screenHeight ();
     QTime timer;
     timer.start ();
-	rayTracer->setTracing(mode);
+	rayTracer->setTracing(modeTracing);
     viewer->setRayImage(rayTracer->render (viewer->getRayImage(), camPos, viewDirection, upVector, rightVector,
 					   fieldOfView, aspectRatio, screenWidth, screenHeight));
     statusBar()->showMessage(QString ("Raytracing performed in ") +
@@ -162,6 +152,20 @@ void Window::setAaOption(int option) {
   case 2:
     rayTracerInstance->setAaOption(RAYTRACER_AAx3);
     break;
+  }
+}
+
+void Window::setRayOption(int option) {
+  switch(option) {
+  case 0:
+    modeTracing = RAY_TRACING;
+    break;
+  case 1:
+    modeTracing = PATH_TRACING;
+    break;
+  case 2:
+	modeTracing = PATH_TRACING_LOIC;
+	break;
   }
 }
 
@@ -289,12 +293,48 @@ void Window::rebuildKdTree() {
 	scene->rebuildKdTree();
 }
 
-void Window::initControlWidget () {
-	scrollArea = new QScrollArea();
-    controlWidget = new QGroupBox ();
-    QVBoxLayout * layout = new QVBoxLayout (controlWidget);
-    
-    QGroupBox * previewGroupBox = new QGroupBox ("Preview", controlWidget);
+void Window::initMenu() {
+	controlWidget = new QGroupBox();
+	QVBoxLayout *layout = new QVBoxLayout(controlWidget);
+
+    QGroupBox * rayGroupBox = new QGroupBox ("Ray Tracing", controlWidget);
+    QVBoxLayout * rayLayout = new QVBoxLayout (rayGroupBox);
+    QPushButton * rayButton = new QPushButton ("Render", rayGroupBox);
+    rayLayout->addWidget (rayButton);
+    connect (rayButton, SIGNAL (clicked ()), this, SLOT (renderRayImage ()));
+ 
+    QPushButton * showButton = new QPushButton ("Show", rayGroupBox);
+    rayLayout->addWidget (showButton);
+    connect (showButton, SIGNAL (clicked ()), this, SLOT (showRayImage ()));
+    QPushButton * saveButton  = new QPushButton ("Save", rayGroupBox);
+    connect (saveButton, SIGNAL (clicked ()) , this, SLOT (exportRayImage ()));
+    rayLayout->addWidget (saveButton);
+
+    // RayTracing
+    QComboBox *rayTypeList = new QComboBox(rayGroupBox);
+    rayTypeList->addItem("Simple Ray Tracing");
+    rayTypeList->addItem("Laert's Path Tracing");
+    rayTypeList->addItem("Loic's Path Tracing");
+    connect (rayTypeList, SIGNAL (activated (int)), this, SLOT (setRayOption (int)));
+    rayLayout->addWidget (rayTypeList);
+
+    layout->addWidget (rayGroupBox);
+	QTabWidget *qTabWidget = new QTabWidget();
+
+	qTabWidget->addTab(getGeneralTabWidget(), "General");
+	qTabWidget->addTab(getGeneralSettingsTabWidget(), "Simple Ray Tracing");
+	qTabWidget->addTab(getPathTracingSettingsTabWidget(), "PathTracing");
+	qTabWidget->addTab(getKdTreeSettingsTabWidget(), "KdTree");
+	qTabWidget->addTab(getSceneSettingsTabWidget(), "Scene");
+
+	layout->addWidget(qTabWidget);
+}
+
+QWidget * Window::getGeneralTabWidget() {
+    QGroupBox *generalWidget = new QGroupBox ();
+    QVBoxLayout * layout = new QVBoxLayout (generalWidget);
+
+    QGroupBox * previewGroupBox = new QGroupBox ("Preview", generalWidget);
     QVBoxLayout * previewLayout = new QVBoxLayout (previewGroupBox);
     
     QCheckBox * wireframeCheckBox = new QCheckBox ("Wireframe", previewGroupBox);
@@ -316,149 +356,65 @@ void Window::initControlWidget () {
     previewLayout->addWidget (snapshotButton);
 
     layout->addWidget (previewGroupBox);
-    
-    QGroupBox * rayGroupBox = new QGroupBox ("Ray Tracing", controlWidget);
-    QVBoxLayout * rayLayout = new QVBoxLayout (rayGroupBox);
-    QPushButton * rayButton = new QPushButton ("Render", rayGroupBox);
-    rayLayout->addWidget (rayButton);
-    connect (rayButton, SIGNAL (clicked ()), this, SLOT (rayTraceImage ()));
-    
-    QPushButton * pathTraceButton = new QPushButton ("Render with path tracing", rayGroupBox);
-    rayLayout->addWidget (pathTraceButton);
-    connect (pathTraceButton, SIGNAL (clicked ()), this, SLOT (pathTraceImage ()));
- 
-    QPushButton * showButton = new QPushButton ("Show", rayGroupBox);
-    rayLayout->addWidget (showButton);
-    connect (showButton, SIGNAL (clicked ()), this, SLOT (showRayImage ()));
-    QPushButton * saveButton  = new QPushButton ("Save", rayGroupBox);
-    connect (saveButton, SIGNAL (clicked ()) , this, SLOT (exportRayImage ()));
-    rayLayout->addWidget (saveButton);
 
-    // Anti aliasing options
-    QComboBox *aaTypeList = new QComboBox(rayGroupBox);
+
+    QGroupBox * globalGroupBox = new QGroupBox ("Global Settings", generalWidget);
+    QVBoxLayout * globalLayout = new QVBoxLayout (globalGroupBox);
+    
+    QPushButton * bgColorButton  = new QPushButton ("Background Color", globalGroupBox);
+    connect (bgColorButton, SIGNAL (clicked()) , this, SLOT (setBGColor()));
+    globalLayout->addWidget (bgColorButton);
+    
+    QPushButton * aboutButton  = new QPushButton ("About", globalGroupBox);
+    connect (aboutButton, SIGNAL (clicked()) , this, SLOT (about()));
+    globalLayout->addWidget (aboutButton);
+    
+    QPushButton * quitButton  = new QPushButton ("Quit", globalGroupBox);
+    connect (quitButton, SIGNAL (clicked()) , qApp, SLOT (closeAllWindows()));
+    globalLayout->addWidget (quitButton);
+
+    layout->addWidget (globalGroupBox);
+
+	return generalWidget;
+
+}
+
+QWidget * Window::getGeneralSettingsTabWidget() {
+    QGroupBox *generalWidget = new QGroupBox ();
+    QVBoxLayout * layout = new QVBoxLayout (generalWidget);
+
+    QComboBox *aaTypeList = new QComboBox(generalWidget);
     aaTypeList->addItem("No AA");
     aaTypeList->addItem("AA x 2");
     aaTypeList->addItem("AA x 3");
     connect (aaTypeList, SIGNAL (activated (int)), this, SLOT (setAaOption (int)));
-    rayLayout->addWidget (aaTypeList);
+    layout->addWidget (aaTypeList);
     
     // Shadows options
-    QComboBox *shadowTypeList = new QComboBox(rayGroupBox);
+    QComboBox *shadowTypeList = new QComboBox(generalWidget);
     shadowTypeList->addItem("No shadow");
     shadowTypeList->addItem("Hard shadow");
     shadowTypeList->addItem("Soft shadow");
     connect (shadowTypeList, SIGNAL (activated (int)), this, SLOT (setShadowOption (int)));
-    rayLayout->addWidget (shadowTypeList);
+    layout->addWidget (shadowTypeList);
 
-	rayLayout->addWidget(new QLabel("Nb ray soft shadow:"));
+	layout->addWidget(new QLabel("Nb ray soft shadow:"));
 	QSpinBox *shadowNumberRay = new QSpinBox();
 	shadowNumberRay->setValue(getShadowNumberRay());
 	shadowNumberRay->setRange(0, 1000000);
 	connect(shadowNumberRay, SIGNAL(valueChanged(int)), this, SLOT (setShadowNumberRay(int)));
-	rayLayout->addWidget(shadowNumberRay);
+	layout->addWidget(shadowNumberRay);
 
-	rayLayout->addWidget(new QLabel("Radius SShadow L1:"));
+	layout->addWidget(new QLabel("Radius SShadow L1:"));
 	QDoubleSpinBox *shadowRadius = new QDoubleSpinBox();
 	shadowRadius->setValue(getShadowRadius());
 	shadowRadius->setRange(0, 100);
 	shadowRadius->setSingleStep(0.01);
 	connect(shadowRadius, SIGNAL(valueChanged(double)), this, SLOT (setShadowRadius(double)));
-	rayLayout->addWidget(shadowRadius);
-    
-    layout->addWidget (rayGroupBox);
-
-
-	// KdTreeOption
-	//
-    QGroupBox * kdGroupBox = new QGroupBox ("KdTree", controlWidget);
-    QVBoxLayout * kdLayout = new QVBoxLayout (kdGroupBox);
-
-	kdLayout->addWidget(new QLabel("Depth"));
-	QSpinBox *kdDepth = new QSpinBox();
-	kdDepth->setValue(KdTreeElement::maxDepth);
-	kdDepth->setRange(0, 100000);
-	connect(kdDepth, SIGNAL(valueChanged(int)), this, SLOT (setMaxDepth(int)));
-	kdLayout->addWidget(kdDepth);
-
-	kdLayout->addWidget(new QLabel("Triangle nb"));
-	QSpinBox *kdTriangle = new QSpinBox();
-	kdTriangle->setValue(KdTreeElement::trianglePerLeaf);
-	kdTriangle->setRange(0, 100000);
-	connect(kdTriangle, SIGNAL(valueChanged(int)), this, SLOT (setTrianglePerLeaf(int)));
-	kdLayout->addWidget(kdTriangle);
-
-    QPushButton * rebuildKdButton = new QPushButton ("rebuild Kd", kdGroupBox);
-    kdLayout->addWidget (rebuildKdButton);
-    connect (rebuildKdButton, SIGNAL (clicked ()), this, SLOT (rebuildKdTree ()));
-
-    layout->addWidget (kdGroupBox);
-    
-
-
-    // Path tracing options
-    QGroupBox * ptGroupBox = new QGroupBox ("Path tracing", controlWidget);
-    QVBoxLayout * ptLayout = new QVBoxLayout (ptGroupBox);
-    ptLayout->addWidget(new QLabel("Nb ray pathTrace:"));
-    QSpinBox *pathTraceNumberRay = new QSpinBox();
-    pathTraceNumberRay->setValue(getPathTraceNumberRay());
-    pathTraceNumberRay->setRange(0, 1000000);
-    connect(pathTraceNumberRay, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceNumberRay(int)));
-    ptLayout->addWidget(pathTraceNumberRay);
-
-    ptLayout->addWidget(new QLabel("Angle for path tracing rays:"));
-    QDoubleSpinBox *pathTraceAngle = new QDoubleSpinBox();
-    pathTraceAngle->setValue(getPathTraceAngle());
-    pathTraceAngle->setRange(0, M_PI);
-    pathTraceAngle->setSingleStep(0.01);
-    connect(pathTraceAngle, SIGNAL(valueChanged(double)), this, SLOT (setPathTraceAngle(double)));
-    ptLayout->addWidget(pathTraceAngle);
-    
-    ptLayout->addWidget(new QLabel("Depth:"));
-    QSpinBox *pathTraceDepth = new QSpinBox();
-    pathTraceDepth->setValue(getPathTraceDepth());
-    pathTraceDepth->setRange(0, 1000000);
-    pathTraceDepth->setSingleStep(1);
-    connect(pathTraceDepth, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceDepth(int)));
-    ptLayout->addWidget(pathTraceDepth);
-    
-    layout->addWidget (ptGroupBox);
-
-  
-	// Loic Path tracing options
-
-    QGroupBox * ptLoicGroupBox = new QGroupBox ("Loic's Path tracing", controlWidget);
-    QVBoxLayout * ptLoicLayout = new QVBoxLayout (ptLoicGroupBox);
-
-    QPushButton * pathLoicButton = new QPushButton ("PT Render", ptLoicGroupBox);
-    ptLoicLayout->addWidget (pathLoicButton);
-    connect (pathLoicButton, SIGNAL (clicked ()), this, SLOT (pathTraceImageLoic ()));
-
-    QPushButton * pathLoicResetButton = new QPushButton ("Reset path tracing", ptLoicGroupBox);
-    ptLoicLayout->addWidget (pathLoicResetButton);
-    connect (pathLoicResetButton, SIGNAL (clicked ()), this, SLOT (resetPathTracingLoic ()));
-
-    ptLoicLayout->addWidget(new QLabel("Iteration:"));
-    QSpinBox *pathLoicTraceIteration = new QSpinBox();
-    pathLoicTraceIteration->setValue(getIterationPerTracingLoic());
-    pathLoicTraceIteration->setRange(0, 1000000);
-    pathLoicTraceIteration->setSingleStep(1);
-    connect(pathLoicTraceIteration, SIGNAL(valueChanged(int)), this, SLOT (setIterationPerTracingLoic(int)));
-    ptLoicLayout->addWidget(pathLoicTraceIteration);
-
-    ptLoicLayout->addWidget(new QLabel("Depth:"));
-    QSpinBox *pathLoicTraceDepth = new QSpinBox();
-    pathLoicTraceDepth->setValue(getPathTraceDepthLoic());
-    pathLoicTraceDepth->setRange(0, 1000000);
-    pathLoicTraceDepth->setSingleStep(1);
-    connect(pathLoicTraceDepth, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceDepthLoic(int)));
-    ptLoicLayout->addWidget(pathLoicTraceDepth);
-
-    layout->addWidget (ptLoicGroupBox);
-
-
+	layout->addWidget(shadowRadius);
 
     // Ambient Occlusion Options
-    QGroupBox * aoGroupBox = new QGroupBox ("Ambient Occlusion", controlWidget);
+    QGroupBox * aoGroupBox = new QGroupBox ("Ambient Occlusion", generalWidget);
     QVBoxLayout * aoLayout = new QVBoxLayout (aoGroupBox);
     QCheckBox *AOCheckBox = new QCheckBox("Enable AO", aoGroupBox);
 	connect (AOCheckBox, SIGNAL(toggled (bool)), this, SLOT(setAOOption(bool)));
@@ -494,8 +450,100 @@ void Window::initControlWidget () {
 	aoLayout->addWidget(AOCoeff);
 
     layout->addWidget (aoGroupBox);
+    
+	return generalWidget;
+}
 
-    Scene *scene = Scene::getInstance();
+QWidget * Window::getPathTracingSettingsTabWidget() {
+    QGroupBox *pathTraceWidget = new QGroupBox ();
+    QVBoxLayout * layout = new QVBoxLayout (pathTraceWidget);
+
+    QGroupBox * ptGroupBox = new QGroupBox ("Laert's Path tracing", pathTraceWidget);
+    QVBoxLayout * ptLayout = new QVBoxLayout (ptGroupBox);
+    ptLayout->addWidget(new QLabel("Nb ray pathTrace:"));
+    QSpinBox *pathTraceNumberRay = new QSpinBox();
+    pathTraceNumberRay->setValue(getPathTraceNumberRay());
+    pathTraceNumberRay->setRange(0, 1000000);
+    connect(pathTraceNumberRay, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceNumberRay(int)));
+    ptLayout->addWidget(pathTraceNumberRay);
+
+    ptLayout->addWidget(new QLabel("Angle (only Laert's):"));
+    QDoubleSpinBox *pathTraceAngle = new QDoubleSpinBox();
+    pathTraceAngle->setValue(getPathTraceAngle());
+    pathTraceAngle->setRange(0, M_PI);
+    pathTraceAngle->setSingleStep(0.01);
+    connect(pathTraceAngle, SIGNAL(valueChanged(double)), this, SLOT (setPathTraceAngle(double)));
+    ptLayout->addWidget(pathTraceAngle);
+    
+    ptLayout->addWidget(new QLabel("Depth:"));
+    QSpinBox *pathTraceDepth = new QSpinBox();
+    pathTraceDepth->setValue(getPathTraceDepth());
+    pathTraceDepth->setRange(0, 1000000);
+    pathTraceDepth->setSingleStep(1);
+    connect(pathTraceDepth, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceDepth(int)));
+    ptLayout->addWidget(pathTraceDepth);
+
+	layout->addWidget(ptGroupBox);
+
+	// Loic Path tracing options
+
+    QGroupBox * ptLoicGroupBox = new QGroupBox ("Loic's Path tracing", pathTraceWidget);
+    QVBoxLayout * ptLoicLayout = new QVBoxLayout (ptLoicGroupBox);
+
+
+    ptLoicLayout->addWidget(new QLabel("Iteration:"));
+    QSpinBox *pathLoicTraceIteration = new QSpinBox();
+    pathLoicTraceIteration->setValue(getIterationPerTracingLoic());
+    pathLoicTraceIteration->setRange(0, 1000000);
+    pathLoicTraceIteration->setSingleStep(1);
+    connect(pathLoicTraceIteration, SIGNAL(valueChanged(int)), this, SLOT (setIterationPerTracingLoic(int)));
+    ptLoicLayout->addWidget(pathLoicTraceIteration);
+
+    ptLoicLayout->addWidget(new QLabel("Depth:"));
+    QSpinBox *pathLoicTraceDepth = new QSpinBox();
+    pathLoicTraceDepth->setValue(getPathTraceDepthLoic());
+    pathLoicTraceDepth->setRange(0, 1000000);
+    pathLoicTraceDepth->setSingleStep(1);
+    connect(pathLoicTraceDepth, SIGNAL(valueChanged(int)), this, SLOT (setPathTraceDepthLoic(int)));
+    ptLoicLayout->addWidget(pathLoicTraceDepth);
+
+    layout->addWidget (ptLoicGroupBox);
+
+	return pathTraceWidget;
+}
+
+QWidget * Window::getKdTreeSettingsTabWidget() {
+    QGroupBox * kdGroupBox = new QGroupBox ("KdTree", controlWidget);
+    QVBoxLayout * kdLayout = new QVBoxLayout (kdGroupBox);
+
+	kdLayout->addWidget(new QLabel("Depth"));
+	QSpinBox *kdDepth = new QSpinBox();
+	kdDepth->setValue(KdTreeElement::maxDepth);
+	kdDepth->setRange(0, 100000);
+	connect(kdDepth, SIGNAL(valueChanged(int)), this, SLOT (setMaxDepth(int)));
+	kdLayout->addWidget(kdDepth);
+
+	kdLayout->addWidget(new QLabel("Triangle nb"));
+	QSpinBox *kdTriangle = new QSpinBox();
+	kdTriangle->setValue(KdTreeElement::trianglePerLeaf);
+	kdTriangle->setRange(0, 100000);
+	connect(kdTriangle, SIGNAL(valueChanged(int)), this, SLOT (setTrianglePerLeaf(int)));
+	kdLayout->addWidget(kdTriangle);
+
+    QPushButton * rebuildKdButton = new QPushButton ("rebuild Kd", kdGroupBox);
+    kdLayout->addWidget (rebuildKdButton);
+    connect (rebuildKdButton, SIGNAL (clicked ()), this, SLOT (rebuildKdTree ()));
+
+	return kdGroupBox;
+
+}
+
+
+QWidget * Window::getSceneSettingsTabWidget() {
+	Scene *scene = Scene::getInstance();
+	QScrollArea *qScrollArea = new QScrollArea();
+    QGroupBox *sceneWidget = new QGroupBox ();
+    QVBoxLayout * layout = new QVBoxLayout (sceneWidget);
 
 	// Objects properties
     QGroupBox * objectsGroupBox = new QGroupBox ("Objects Properties", controlWidget);
@@ -515,27 +563,8 @@ void Window::initControlWidget () {
 
 	layout->addWidget(lightsGroupBox);
 
-    
-    QGroupBox * globalGroupBox = new QGroupBox ("Global Settings", controlWidget);
-    QVBoxLayout * globalLayout = new QVBoxLayout (globalGroupBox);
-    
-    QPushButton * bgColorButton  = new QPushButton ("Background Color", globalGroupBox);
-    connect (bgColorButton, SIGNAL (clicked()) , this, SLOT (setBGColor()));
-    globalLayout->addWidget (bgColorButton);
-    
-    QPushButton * aboutButton  = new QPushButton ("About", globalGroupBox);
-    connect (aboutButton, SIGNAL (clicked()) , this, SLOT (about()));
-    globalLayout->addWidget (aboutButton);
-    
-    QPushButton * quitButton  = new QPushButton ("Quit", globalGroupBox);
-    connect (quitButton, SIGNAL (clicked()) , qApp, SLOT (closeAllWindows()));
-    globalLayout->addWidget (quitButton);
-
-    layout->addWidget (globalGroupBox);
-
-    layout->addStretch (0);
-	scrollArea->setWidget(controlWidget);
-
+	qScrollArea->setWidget(sceneWidget);
+	return qScrollArea;
 }
 
 QGroupBox * Window::getWidgetObject (Object &o, QWidget *parent) {
