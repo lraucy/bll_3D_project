@@ -236,7 +236,7 @@ void Scene::buildClosedBoxPathTracingScene () {
 
   Mesh topMesh;
   topMesh.loadOFF ("models/top.off");
-  Material topMat;
+  Material topMat(0.8, 0.2, Vec3Df(0.5,0.5,0.5), 0.0, Vec3Df(120.0, 120.0, 120.0));
   Object top (topMesh, topMat, QString("Wall top"));    
   top.setTrans(Vec3Df(0.f, 0.f, 5.f));
   objects.push_back (top);  
