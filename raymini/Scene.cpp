@@ -136,7 +136,7 @@ void Scene::buildClosedBoxScene () {
   objects.push_back (rhino);
     
     
-  Light l (Vec3Df (0.0f, 0.0f, 4.9f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
+  Light l (Vec3Df (0.0f, 0.0f, 4.9f), Vec3Df (1.0f, 1.0f, 1.0f), 1.0f, 0.2f, Vec3Df (-2.0f, -2.f, 0.0f));
   lights.push_back (l);
 }
 
