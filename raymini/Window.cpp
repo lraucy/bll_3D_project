@@ -140,6 +140,27 @@ void Window::setShadowOption(int option) {
   }
 }
 
+void Window::setScene(int option) {
+  Scene * sceneInstance = Scene::getInstance ();
+  switch(option) {
+  case 0:
+    sceneInstance->switchScene(SCENE_DEFAULT_SCENE);
+    break;
+  case 1:
+    sceneInstance->switchScene(SCENE_CLOSED_BOX_SCENE);
+    break;
+  case 2:
+    sceneInstance->switchScene(SCENE_FINAL_SCENE);
+    break;
+  case 3:
+    sceneInstance->switchScene(SCENE_DOUBLE_LIGHT_SCENE);
+    break;
+  case 4:
+    sceneInstance->switchScene(SCENE_CLOSED_BOX_PATH_TRACING_SCENE);
+    break;
+  }
+}
+
 void Window::setAaOption(int option) {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
   switch(option) {
@@ -319,6 +340,17 @@ void Window::initMenu() {
     rayLayout->addWidget (rayTypeList);
 
     layout->addWidget (rayGroupBox);
+
+	QComboBox *sceneList = new QComboBox(controlWidget);
+	sceneList->addItem("Default scene");
+	sceneList->addItem("Closed box scene");
+	sceneList->addItem("Final scene");
+	sceneList->addItem("Double light scene");
+	sceneList->addItem("Path Tracing scene");
+    connect (sceneList, SIGNAL (activated (int)), this, SLOT (setScene (int)));
+    layout->addWidget (sceneList);
+
+
 	QTabWidget *qTabWidget = new QTabWidget();
 
 	qTabWidget->addTab(getGeneralTabWidget(), "General");

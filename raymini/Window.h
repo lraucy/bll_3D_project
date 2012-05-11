@@ -40,6 +40,7 @@ public slots :
 	void setRayOption(int option);
   void setShadowOption(int option);
   void setAaOption(int option);
+  void setScene(int option);
   void setShadowNumberRay(int nbRay);
   int getShadowNumberRay();
   void setShadowRadius(double shadowRadius);
