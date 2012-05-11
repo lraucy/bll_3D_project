@@ -43,6 +43,7 @@ public:
     inline void setBackgroundColor (const Vec3Df & c) { backgroundColor = c; }
     
   inline void setAOOption(const bool _aoOpt) { aoOpt = _aoOpt;}
+  inline void setBrdfOption(const bool _brdfOpt) { directIlluminationEnabled = _brdfOpt;}
   inline void setShadowOption(const int _shadowOpt) { shadowOpt = _shadowOpt;} 
   inline void setAaOption(const int _aaOpt) { aaOpt = _aaOpt;} 
   inline void setAONbRay(unsigned int _aoNbRay) { aoNbRay = _aoNbRay;}
@@ -86,7 +87,8 @@ public:
 protected:
     inline RayTracer () { aoNbRay = 10; aoSphereRadius = 5; aoConeAngle = 70; aoCoeff = 0.2;
 	  shadowNbRay = 10; aoOpt = false; pathTraceNbRay = 5; pathTraceAngle = M_PI/2; pathTraceDepth = 2;
-	  iterationPathTracingLoic = 0; pathTraceDepthLoic = 4; iterationPerTracingLoic = 10;}
+	  iterationPathTracingLoic = 0; pathTraceDepthLoic = 4; iterationPerTracingLoic = 10;
+	directIlluminationEnabled = true;}
     inline virtual ~RayTracer () {}
 	const Object * getObjectIntersected(Ray &ray,
 			Vec3Df &intersectionPoint, Triangle &intersectionTriangle) const;
@@ -156,6 +158,8 @@ private:
   unsigned int iterationPathTracingLoic;
   unsigned int pathTraceDepthLoic;
   unsigned int iterationPerTracingLoic;
+
+  bool directIlluminationEnabled;
   
 };
 

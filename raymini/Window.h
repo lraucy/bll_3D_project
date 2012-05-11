@@ -50,6 +50,7 @@ public slots :
   int getIterationPerTracingLoic();
   void setIterationPerTracingLoic(int iteration);
   void resetPathTracingLoic();
+  void setBrdfOption(bool option);
   void setAOOption(bool option);
   void setAONumberRay(int nbRay);
   int getAONumberRay();

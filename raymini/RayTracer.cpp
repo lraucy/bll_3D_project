@@ -142,6 +142,8 @@ Vec3Df RayTracer::getPhongBRDFWithLights(const Ray &ray, const Object &o, const 
 
 
 	Vec3Df color(0.0f, 0.0f, 0.0f);
+	if(!directIlluminationEnabled)
+		return color;
 	float a = 1.0;
 	float b=0.0;
 	float c=0.01;
@@ -324,6 +326,9 @@ Vec3Df RayTracer::getColorFromRayWithRayTracing(const Vec3Df &camPos, const Vec3
 			lights[i].setIntensity(lightsIntensity[i]*lights[i].getIntensity());
 		c = getPhongBRDFWithLights(ray, *objectIntersected, intersectionPointGlobalMark, normal, lights);
 		c += ambientOcclusion(intersectionPointGlobalMark, normal) * objectIntersected->getMaterial().getColor();
+		float division = (aoOpt) ? 1.0 : 0.0 + (directIlluminationEnabled) ? 1.0 : 0.0;
+		division = (division == 0.0) ? 1.0 : division;
+		c /= division;
 
 		normal.normalize();
 		c += getPhongBRDFReflectance(ray, *objectIntersected, intersectionPointGlobalMark, normal);

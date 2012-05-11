@@ -195,6 +195,11 @@ void Window::setAOOption(bool option) {
     rayTracerInstance->setAOOption(option);
 }
 
+void Window::setBrdfOption(bool option) {
+  RayTracer * rayTracerInstance = RayTracer::getInstance ();
+    rayTracerInstance->setBrdfOption(option);
+}
+
 int Window::getShadowNumberRay() {
   RayTracer * rayTracerInstance = RayTracer::getInstance ();
     return rayTracerInstance->getShadowNbRay();
@@ -414,6 +419,11 @@ QWidget * Window::getGeneralTabWidget() {
 QWidget * Window::getGeneralSettingsTabWidget() {
     QGroupBox *generalWidget = new QGroupBox ();
     QVBoxLayout * layout = new QVBoxLayout (generalWidget);
+
+    QCheckBox *brdfCheckBox = new QCheckBox("Enable direct illumination", generalWidget);
+	brdfCheckBox->setChecked(true);
+	connect (brdfCheckBox, SIGNAL(toggled (bool)), this, SLOT(setBrdfOption(bool)));
+	layout->addWidget(brdfCheckBox);
 
     QComboBox *aaTypeList = new QComboBox(generalWidget);
     aaTypeList->addItem("No AA");
